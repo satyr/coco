@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Try Coco</title>
+<script type="coco">
+
+resultOrError = (outp, func) ->
+  err = null
+  try out = func!
+  catch exc err := exc
+  outp <<<
+    value: if err then "ERROR:\n\n#{err}" else (out || "")
+    className: if err then \err
+  err || out || ""
+
+init = ->
+  outp = document.getElementById \output
+  inp = document.getElementById \input
+  prevValue = null
+  
+  inp.addEventListener \keyup, # Compile on each keypress.
+    (event) ->
+      newValue = inp.value
+      if prevValue != newValue
+        resultOrError outp, -> Coco.compile newValue, {+bare}
+        prevValue := newValue
+    , false
+  
+  inp.addEventListener \keypress, # Run on CTRL+Enter.
+    (event) ->
+      if event.ctrlKey and (event.keyCode == 10 or event.keyCode == 13)
+        setTimeout (-> resultOrError outp, -> Coco.run inp.value), 10
+        event.preventDefault!
+    , false
+  
+  inp.focus!
+
+window.addEventListener \load, init, false
+</script>
+<script type="text/javascript" src="coco.js"></script>
+<style type="text/css">
+*{margin:0;padding:0;border:none}
+html,body{height:100%;overflow:none}
+textarea{top:0;bottom:0;width:50%;height:100%;resize:none;position:absolute;font:100% consolas,monospace}
+#input{background:#fffef2;left:0;right:50%}
+#output{background:#f2fffb;left:50%;right:0}
+.err{color:red}
+</style>
+</head>
+<body>
+<textarea id="input" rows=30 placeholder="Input Coco"># Input Coco here.
+# The resulting JS will appear on the right.
+# CTRL+Enter to run code.
+
+</textarea>
+<textarea id="output" rows=30 placeholder="Output JavaScript"></textarea>
+</body>
+</html>
