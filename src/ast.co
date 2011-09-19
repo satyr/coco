@@ -100,9 +100,10 @@
     delete @children
     @[@aSource] <<< {+cond}
 
-  # Throws a syntax error, appending `@line` number to the message.
-  carp: ->
-    throw SyntaxError "#it on line #{ @line or @traverseChildren -> it.line }"
+  # Throws a syntax error, appending the line number to the message.
+  carp: -> throw SyntaxError "#it on line #{ @getLine! }"
+
+  getLine: -> @line or @traverseChildren -> it.line
 
   # Defines delegaters.
   delegate: (names, fn) ->
@@ -235,22 +236,26 @@ class exports.Block extends Node
 
   compile: (o, level ? o.level) ->
     return @compileExpressions o, level if level
-    o.block = this; tab = o.indent
-    codes = for node of @lines
+    o.block = this
+    code = ''; tab = o.indent
+    for node, i of @lines
+      code += \\n if i
+      code += "/*#that*/" if ..lineno and node.getLine!
       node = node.unfoldSoak o or node
-      code = tab + (node <<< {+front})compile o, level
-      if node.isStatement! then code else code + node.terminator
-    codes.join \\n
+      code += tab + (node <<< {+front})compile o, level
+      node.isStatement! or code += node.terminator
+    code
 
   # **Block** is the only node that can serve as the root.
   compileRoot: (options) ->
     o = {level: LEVEL_TOP, scope: @scope = Scope.root = new Scope, ...options}
     delete o.filename
+    Block.lineno = delete o.lineno
     o.indent = if bare = delete o.bare then '' else TAB
-    @chomp()
     if /^\s*(?:[/#]|javascript:)/test @lines.0?code
       prefix = @lines.shift()code + \\n
     if delete o.repl
+      @chomp!
       if bare
         @lines[i] = Parens that if @lines[i = *-1]
       else

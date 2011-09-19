@@ -88,7 +88,7 @@ function compileScripts
 # Compile a single source script, containing the given code, according to the
 # requested options.
 function compileScript file, input, base
-  t = {file, input, options: filename: file, bare: !!o.bare}
+  t = {file, input, options: filename: file, bare: !!o.bare, lineno: !!o.run}
   try
     Coco.emit \lex t
     t.tokens = Coco.tokens t.input, raw: o.lex
