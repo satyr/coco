@@ -28,6 +28,10 @@ Coco tries to amend them, entwining good parts of both.
 - [Additions](https://github.com/satyr/coco/wiki/additions)
 - [Annotated Source](http://satyr.github.com/coco/src/)
 
+## Tools
+- [Web Console](http://satyr.github.com/cup/)
+- [TextMate Bundle](https://github.com/dsc/coco-tmbundle)
+
 ## Installation
 
 ### on [Node.js](http://nodejs.org)
