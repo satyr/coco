@@ -137,10 +137,16 @@ bnf =
     o 'Chain ASSIGN INDENT ArgList OptComma DEDENT'
     , -> Assign $1.unwrap!, Arr.maybe($4), $2
 
+    o 'Expression SOFTIMPORT Expression'
+    , -> SoftImport $1, $3           , $2 is \<<<<?
+    o 'Expression SOFTIMPORT INDENT ArgList OptComma DEDENT'
+    , -> SoftImport $1, Arr.maybe($4), $2 is \<<<<?
+
     o 'Expression IMPORT Expression'
     , -> Import $1, $3           , $2 is \<<<<
     o 'Expression IMPORT INDENT ArgList OptComma DEDENT'
     , -> Import $1, Arr.maybe($4), $2 is \<<<<
+
 
     o 'CREMENT Chain' -> Unary $1, $2.unwrap!
     o 'Chain CREMENT' -> Unary $2, $1.unwrap!, true
@@ -306,7 +312,7 @@ operators =
   <[ left     ^ BITWISE    ]>
   <[ right    COMPARE      ]>
   <[ left     RELATION     ]>
-  <[ left     SHIFT IMPORT ]>
+  <[ left     SHIFT IMPORT SOFTIMPORT ]>
   <[ left     +-           ]>
   <[ left     MATH         ]>
   <[ right    UNARY        ]>

@@ -35,6 +35,7 @@ tint \co [
   | f(?:or(?:[^\n\S]+(?:own|ever))?|inally|unction)
   | n(?:ew|ot)
   | c(?:ontinue|a(?:se|tch)|lass)
+  | softimport(?:[^\n\S]+all)?)
   | i(?:[fs]|n(?:stanceof)?|mport(?:[^\n\S]+all)?)
   | e(?:lse|x(?:tends|port))
   | d(?:e(?:fault|lete|bugger)|o)

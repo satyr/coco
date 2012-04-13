@@ -1204,6 +1204,85 @@ class exports.Import extends Node
       code += (if com then ' ' else ', ') + reft.compile o, LEVEL_PAREN
     if o.level < LEVEL_LIST then code else "(#code)"
 
+#### SoftImport
+# Like import but doesn't overwrite existing properties.
+# FIXME: This might be merged with import somehow, but I haven't figured out enough about how this parse thing works yet.
+class exports.SoftImport extends Node
+  (@left, @right, @all and \All) ~>
+    if not all and left instanceof Obj and right.items
+      return Obj left.items.concat right.asObj()items
+
+  children: <[ left right ]>
+
+  show: -> @all
+
+  ::delegate <[ isCallable isArray ]> -> @left[it]()
+
+  unfoldSoak: (o) ->
+    {left} = this
+    if left instanceof Existence and not left.negated
+      if left.=it instanceof Var
+        {value} = @left = left
+        unless o.scope.check value, true
+          left = JS "typeof #value != 'undefined' && #value"
+      else
+        [left, @left, temps] = left.cache o
+      return If(left, this) <<< {temps, +soak, @cond, @void}
+    If.unfoldSoak o, this, \left
+    or (@void or not o.level) and
+    If.unfoldSoak o, this, \right
+
+  compileNode: (o) ->
+    {right} = this
+    unless @all
+      if right instanceof Chain
+        right = right.unfoldSoak   o
+             or right.unfoldAssign o
+             or right.expandSlice  o .unwrap!
+      return @compileAssign o, right.asObj!items if right instanceof List
+    Call.make Util("softImport#{ @all or '' }"), [@left, right] .compileNode o
+
+  # If the right operand of `<<<` is an object or array literal,
+  # expand it to a series of assignments.
+  compileAssign: (o, items) ->
+    return @left.compile o unless items.length
+    top = not o.level
+    if items.length < 2 and (top or @void or items.0 instanceof Splat)
+      reft = @left
+      reft = Parens reft if reft.isComplex!
+    else [left, reft, @temps] = @left.cache o
+    [delim, space] = if top then [\; \\n + @tab] else [\, ' ']
+    delim += space
+    code = if @temps then left.compile(o, LEVEL_PAREN) + delim else ''
+    for node, i of items
+      i and code += if com then space else delim
+      if com = node.comment
+        code += node.compile o
+        continue
+      if node instanceof Splat
+        code += SoftImport(reft, node.it)compile o
+        continue
+      node.=first if logic = node.getDefault!
+      if dyna = node instanceof Parens
+        [key, val] = node.it.cache o, true
+      else if node instanceof Prop
+        {key, val} = node
+        if val.accessor
+          key = JS "'#{key.name}'" if key instanceof Key
+          code += "#{ reft.compile o, LEVEL_CALL }
+            .__define#{ if val.params.0 then val.void = \S else \G }etter__
+            (#{ key.compile o, LEVEL_LIST }, #{ val.compile o, LEVEL_LIST })"
+          continue
+      else key = val = node
+      dyna  or  key.=maybeKey!
+      logic and val = logic <<< first: val
+      code += Assign(Chain reft, [Index key]; val)compile o, LEVEL_PAREN
+    return code if top
+    @void or node instanceof Splat or
+      code += (if com then ' ' else ', ') + reft.compile o, LEVEL_PAREN
+    if o.level < LEVEL_LIST then code else "(#code)"
+
+
 #### Of
 # Handles `of` operation that tests if the left operand is included within
 # the right operand, arraywise.
@@ -1981,8 +2060,20 @@ UTILITIES =
     for (var key in src) if (own.call(src, key)) obj[key] = src[key];
     return obj;
   }'''
+
+  softImport: '''function(obj, src){
+    var own = {}.hasOwnProperty;
+    for (var key in src) if (own.call(src, key) && !own.call(obj, key)) obj[key] = src[key];
+    return obj;
+  }'''
+
   importAll: '''function(obj, src){
     for (var key in src) obj[key] = src[key];
+    return obj;
+  }'''
+
+  softImportAll: '''function(obj, src){
+    for (var key in src) obj[key] || (obj[key] = src[key]);
     return obj;
   }'''
 
@@ -2002,7 +2093,7 @@ UTILITIES =
     return false;
   }'''
 
-  out: '''typeof exports != 'undefined' && exports || this'''
+  out: '''(typeof exports != 'undefined' && exports) || (typeof script != 'undefined' && script) || this || {}'''
 
   # Shortcuts to speed up the lookup time for native methods.
   split    : "''.split"
