@@ -56,7 +56,7 @@ CocoMode.Rules =
         |i(?:n(?:stanceof)?|mport(?:\s+all)?|[fs])
         |d(?:e(?:fault|lete|bugger)|o)
         |f(?:or(?:\s+own)?|inally|unction)
-        |s(?:uper|witch)
+        |s(?:uper|witch|oftimport(?:\s+all)?)
         |e(?:lse|x(?:tends|port)|val)
         |a(?:nd|rguments)
         |n(?:ew|ot)
