@@ -89,7 +89,7 @@ eq 1, a[0][*-*]
 eq 2, a[--*-1]
 eq 2, a.length
 
-throws 'stray star on line 1' -> Coco.compile '[*-1]'
+compileThrows 'stray star' 1 '[*-1]'
 
 
 # Binding Access
@@ -100,6 +100,8 @@ parent =
 eq 42, do(0; parent.child.~method)
 eq 42, do(0; parent.child~"me#{'th'}od")
 eq 42, parent.child. ~ [\method] null
+
+compileThrows 'invalid assign' 1 'o~m=g'
 
 
 # Dots have to workaround syntax error when accessing a simple number.
@@ -125,10 +127,10 @@ eq '0,1' ''+a.0
 eq '0,1' ''+a[...0]
 eq 2 a.1.2
 
-throws 'calling a slice on line 1' -> Coco.compile 'a{0}()'
+compileThrows 'calling a slice' 1 'a{0}()'
 
-throws 'empty slice on line 1' -> Coco.compile 'o{}'
-throws 'empty slice on line 1' -> Coco.compile 'o[,,]'
+compileThrows 'empty slice' 1 'o{}'
+compileThrows 'empty slice' 1 'o[,,]'
 
 if 0 then @front{ne,ss}
 

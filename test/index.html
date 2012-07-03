@@ -12,6 +12,7 @@
 ,'chaining'
 ,'comment'
 ,'compilation'
+,'declaration'
 ,'existence'
 ,'function'
 ,'if'
@@ -46,6 +47,9 @@ say = (msg, err) ->
 @throws = (msg, fun) ->
   try do fun catch return eq e?message, msg
   ok false "should throw: #{msg}"
+
+@compileThrows = (msg, lno, code) ->
+  throws "#msg on line #lno" !-> Coco.compile code
 
 for name of sources then let
   e <- Coco.load name + \.co

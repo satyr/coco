@@ -1,5 +1,8 @@
 I = (x) -> x
-eq I, I I
+M = (x) -> x x
+
+eq I, M I
+
 
 # Bare calls.
 eq I (), I( )
@@ -187,10 +190,6 @@ eq ok, do ->
   /* even with trailing comments. */
 
 
-throws 'misplaced function declaration on line 1', ->
-  Coco.compile 'if 1 then function F then'
-
-
 # Returns with multiple branches.
 func = ->
   if it
@@ -217,12 +216,12 @@ eq 3, do -> (1; 2; 3)
 eq 3, do -> return (1; 2; 3)
 
 
-throws 'inconvertible statement on line 1', -> Coco.compile '(return)'
-throws 'inconvertible statement on line 2', -> Coco.compile '''
+compileThrows 'inconvertible statement' 1 'b = break'
+compileThrows 'inconvertible statement' 2 '''
   r =
     return
 '''
-throws 'inconvertible statement on line 3', -> Coco.compile '''
+compileThrows 'inconvertible statement' 3 '''
   r = if 1
     2 +
     return
@@ -323,7 +322,7 @@ eq arguments,
 ok (@arguments, @eval) ->
 
 
-throws 'duplicate parameter "a" on line 1', -> Coco.compile '(a, a) ->'
+compileThrows 'duplicate parameter "a"' 1 '(a, a) ->'
 
 
 # Fun with radical parameters.
@@ -339,8 +338,8 @@ eq void Function() ->
 
 
 ### Invalid call detection
-throws 'invalid callee on line 1'      -> Coco.compile '[]()'
-throws 'invalid constructor on line 1' -> Coco.compile 'new 42'
+compileThrows 'invalid callee'      1 '[]()'
+compileThrows 'invalid constructor' 1 'new 42'
 
 
 ### `new` block
@@ -363,9 +362,8 @@ eq ok, do
 
 new
   me = this
-  f <~ I
+  f <~ M
   eq me, this
-  <- ->
   eq \function typeof f
 
 eq 3 do
@@ -399,6 +397,27 @@ new
   function triple a  then a * 3
   eq 4, double 2
   eq 9, triple 3
+
+compileThrows 'redeclaration of function "f"' 2 '''
+  f = 0
+  function f then
+'''
+compileThrows 'redeclaration of function "f"' 2 '''
+  function f
+    f = 1
+'''
+compileThrows 'redeclaration of function "f"' 2 '''
+  function f then
+  f = 2
+'''
+compileThrows 'redeclaration of function "f"' 1 '''
+  function f f then
+'''
+compileThrows 'increment of function "f"' 2 '''
+  function f then
+  ++f
+'''
+compileThrows 'misplaced function declaration' 2 'if 1\n function F then'
 
 
 ### `let`
@@ -449,15 +468,29 @@ f = (x, y) -> [this, x, y]
 with 0 then let x = 1, y = 2
   eq '0,1,2' ''+ f ...
   eq ','     ''+ f(...[])slice 1
-throws 'invalid splat on line 1' -> Coco.compile 'f ..., a'
 
 
 ### do-`not`-return
 eq void do !-> true
 eq void do !~> true
 eq void do
-  <-! run = -> it!
-  <~! run ...
+  <-! M
+  <~! M
   !function C then C
   ok new C instanceof C
   true
+eq false !!->
+
+
+### explicit naming
+let
+  do a = :b -> eq a, b
+  do c = :d!-> eq c, d
+  do e = !:f-> eq e, f
+let
+  a <-:b  M
+  c <-:d! M
+  e <-!:f M
+  eq a, b
+  eq c, d
+  eq e, f

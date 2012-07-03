@@ -8,13 +8,13 @@ global import
   fs   : require \fs
   path : require \path
   util : require \util
-  say  : -> process.stdout.write it + \\n
-  warn : -> process.stderr.write it + \\n
-  die  : -> warn it; process.exit 1
-  p    : -> []forEach.call @@, console.dir
-  pp   : (x, showHidden, depth) ->
+  say  : !-> process.stdout.write it + \\n
+  warn : !-> process.stderr.write it + \\n
+  die  : !-> warn it; process.exit 1
+  p    : !-> []forEach.call @@, console.dir
+  pp   : !(x, showHidden, depth) ->
     say util.inspect x, showHidden, depth, !process.env.NODE_DISABLE_COLORS
-  ppp  : -> pp it, true null
+  ppp  : !-> pp it, true, null
 
 # Use the [option parser](#optparse).
 {$args} = o = require(\./optparse) do
@@ -31,7 +31,7 @@ global import
   tokens      : 'print the tokens the rewriter produces'
   ast         : 'print the syntax tree the parser produces'
   json        : 'print/compile as JSON'
-  nodejs      :['pass options through to the "node" binary' \ARGS+]
+  nodejs      :['pass options through to the "node" binary' \ARGS+ '']
   version     : 'display version'
   help        : 'display this'
 
@@ -43,8 +43,6 @@ case o.version then say version!
 case o.help    then say help!
 default
   o.run = not o.compile ||= o.output
-  o.print ||= o.compile and (o.eval or o.stdin)
-  o.bare  ||= o.run or o.json
   process.execPath = argv.0 = argv.1
   argv.splice 2 9e9
   argv.push ...if o.stdin then $args else
@@ -57,12 +55,17 @@ default
   case o.eval
     argv.1 = \eval
     compileScript '' $args * \\n
-  case o.stdin                then compileStdin!
-  case $args.length           then compileScripts!
-  case process.stdin.readable then compileStdin!
-  default
-    o.interactive or say version! + \\n + help! + \\n
+  case o.interactive
     repl!
+  case o.stdin
+    compileStdin!
+  case $args.length
+    compileScripts!
+  case require \tty .isatty 0
+    say version! + \\n + help! + \\n
+    repl!
+  default
+    compileStdin!
 
 # Calls a `fs` method, exiting on error.
 !function fshoot name, arg, callback
@@ -76,21 +79,24 @@ default
 !function compileScripts
   $args.forEach !-> walk it, , true
   !function walk source, base ? path.normalize(source), top
+    !function work
+      fshoot \readFile source, !-> compileScript source, "#it", base
     e, stats <-! fs.stat source
     if e
-      return walk "#source.co" if top
-      die e
+      return walk "#source.co" if top and not /\.co$/test source
+      die "Can't find: #source"
     if stats.isDirectory!
       <-! fshoot \readdir source
-      it.forEach !-> walk path.join(source, it), base
+      <-! it.forEach
+      walk path.join(source, it), base
     else if top or path.extname(source)toLowerCase! is \.co
-      watch source, base if o.watch
-      fshoot \readFile source, !-> compileScript source, "#it", base
+      if o.watch then watch source, work else work!
 
 # Compile a single source script, containing the given code, according to the
 # requested options.
-!function compileScript file, input, base
-  t = {file, input, options: filename: file, bare: !!o.bare}
+!function compileScript filename, input, base
+  options = {filename, o.bare}
+  t       = {input, options}
   try
     Coco.emit \lex t
     t.tokens = Coco.tokens t.input, raw: o.lex
@@ -103,29 +109,28 @@ default
       say if o.json then t.ast.stringify 2 else ''trim.call t.ast
       throw
     Coco.emit \compile t
-    t.output = t.ast.compileRoot t.options
-    if o.run
+    options.bare ||= o.json or o.run
+    t.ast.makeReturn! if o.json or o.run and o.print
+    t.output = t.ast.compileRoot options
+    if o.json or o.run
       Coco.emit \run t
-      unless o.json or o.print
-        Coco.run t.output, t.options <<< {+js}
-        throw
-      global <<< {module, require}
-      r = global.eval t.output
-      if o.json
-      then say JSON.stringify r, null 2
-      else console.log r
-      throw
+      t.result = Coco.run t.output, options, true
     if o.json
-      t.output = JSON.stringify(global.eval t.output; null 2) + \\n
+      t.output = JSON.stringify(t.result, null, 2) + \\n
+    if o.run
+      switch
+      case o.json  then process.stdout.write t.output
+      case o.print then console.log t.result
+      throw
     Coco.emit \write t
-    if o.print
+    if o.print or not filename
     then say t.output.trimRight!
-    else writeJS t.file, t.output, base
+    else writeJS filename, t.output, base
   catch if e?
     if Coco.listeners(\failure)length
       Coco.emit \failure e, t
     else
-      warn "Failed at: #file" if file
+      warn "Failed at: #filename" if filename
       unless e instanceof SyntaxError or /^Parse error /test e.message
         e = e.stack or e
       if o.watch then warn e + \\7
@@ -139,18 +144,15 @@ default
   with process.openStdin!
     code = ''
     @on \data !-> code += it
-    @on \end  !-> compileScript null code
+    @on \end  !-> compileScript '' code
 
-# Watch a source Coco file using `setTimeout`, recompiling it every
-# time the file is updated. May be used in combination with other options,
-# such as `--ast` or `--print`.
-!function watch source, base
-  do loop = !(pre) ->
-    cur <-! fshoot \stat source
-    if pre and pre.mtime ^ cur.mtime
-      fshoot \readFile source, !->
-        compileScript source, "#it", base
-    setTimeout loop, 500ms, cur
+# Watch a source Coco file using `setTimeout`, taking an `action` every
+# time the file is updated.
+!function watch source, action
+  :loop let ptime = 0
+    {mtime} <-! fshoot \stat source
+    do action if ptime ^ mtime
+    setTimeout loop, 500ms, mtime
 
 # Write out a JavaScript source file with the compiled code. By default, files
 # are written out in `cwd` as `.js` files with the same name, but the output
@@ -168,10 +170,10 @@ default
     e <-! fs.writeFile jsPath, js || \\n
     return warn e if e
     util.log "#source => #jsPath" if o.watch
-  <-! path.exists dir
-  if it
-  then do compile
-  else require(\child_process)exec "mkdir -p #dir" compile
+  e <-! fs.stat dir
+  return compile! unless e
+  require \child_process .exec do
+    "mkdir #{[\-p unless /^win/test process.platform]} #dir" compile
 
 # Pretty-print a stream of tokens.
 !function printTokens tokens
@@ -190,18 +192,20 @@ default
 # - __??__: <https://github.com/joyent/node/blob/master/lib/readline.js>
 !function repl
   argv.1 = \repl
-  # ref. <https://github.com/joyent/node/blob/master/lib/repl.js>
-  code  = ''
-  cont  = false
-  repl  = require(\readline)createInterface process.stdin, process.stdout
-  reset = ->
-    repl.line = code := ''
-    repl.prompt!
-  ({_ttyWrite} = repl)_ttyWrite = (char) ->
-    cont := char is \\n
+  # ref. <https://github.com/joyent/node/blob/master/lib/rl.js>
+  code = ''
+  cont = 0
+  rl   = require(\readline)createInterface process.stdin, process.stdout
+  reset = !->
+    rl.line = code := ''
+    rl.prompt!
+  ({_ttyWrite} = rl)_ttyWrite = (char) ->
+    if char is \\n
+    then cont += 1
+    else cont := 0
     _ttyWrite ...
   prompt = \coco
-  prompt += " -c#{ if o.bare then \b else '' }" if o.compile
+  prompt += " -#that" if [\b if o.bare; \c if o.compile]join ''
   unless o.compile
     module.paths = module.._nodeModulePaths \
       module.filename = process.cwd! + \/repl
@@ -209,38 +213,47 @@ default
     global <<< {module, exports, require}
     server = ^require(\repl)REPLServer:: <<<
       context: global, commands: [], useGlobal: true
+      useColors: process.env.NODE_DISABLE_COLORS
       eval: !(code,,, cb) ->
         try res = vm.runInThisContext code, \repl catch then err = e
         cb err, res
-    repl.completer = server~complete
-  repl.on \attemptClose !->
-    if repl.line or code then say ''; reset! else repl.close!
-  repl.on \close process.stdin~destroy
-  repl.on \line !->
-    if cont
+    rl.completer = server~complete
+  rl.on \SIGCONT rl.prompt
+  rl.on \SIGINT !->
+    if @line or code then say ''; reset! else @close!
+  rl.on \close process~exit
+  rl.on \line !->
+    # Trigger evaluation also on double blank lines (^J^J^J).
+    if 0 < cont < 3
       code += it + \\n
-      repl.output.write \. * prompt.length + '. '
+      @output.write \. * prompt.length + '. '
       return
     code += it
     try
       if o.compile
         say Coco.compile code, {o.bare}
       else
-        _  = vm.runInThisContext Coco.compile(code, {+bare, +repl}), \repl
+        _  = vm.runInThisContext Coco.compile(code, {\eval o.bare}), \repl
         _ !? global <<< {_}
         pp  _
         say _ if typeof _ is \function
     catch then say e
     reset!
   process.on \uncaughtException !-> say "\n#{ it?stack or it }"
-  repl.setPrompt "#prompt> "
-  repl.prompt!
+  process.on \exit !->
+    # Handle `echo 42 | coco -i` etc.
+    if code and rl.output.isTTY
+      cont := 0
+      say ''
+      rl.emit \line ''
+  rl.setPrompt "#prompt> "
+  rl.prompt!
 
 # Start up a new __node.js__ instance with the arguments in `--nodejs` passed
 # to it, preserving the other options.
 !function forkNode
   args = argv.slice 1; i = 0
-  args.splice i-- 2 if that of <[ -n --nodejs ]> while args[++i]
+  args.splice i-- 2 if that is \--nodejs while args[++i]
   require(\child_process)spawn do
     process.execPath
     o.nodejs.join(' ')trim!split(/\s+/)concat args

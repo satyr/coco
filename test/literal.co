@@ -20,16 +20,6 @@ eq 36, 0XF + 36RT
 eq 100m2, 10m ** 2
 eq 3000c, 30$ * 100
 
-# [#31](https://github.com/satyr/coco/issues/31): Numeric Ranges
-eq '1,2,3'  String [1 to +3]
-eq '1,0,-1' String Array 1 to -1 by -1
-
-til = String
-eq 2, [Number]0 til 2
-
-throws 'range limit exceeded on line 1' -> Coco.tokens '0 to 1 by 1e-5'
-throws 'empty range on line 3'          -> Coco.tokens '\n\n 1 to 0'
-
 # [coffee#764](https://github.com/jashkenas/coffee-script/issues/764)
 # Boolean/Number should be indexable.
 ok 42['toString']
@@ -153,16 +143,28 @@ eq obj.class + obj.function, 'hotdog'
 
 # Property shorthands.
 new
-  a = 0; @b = 1; x = {a, @b, 2, \3}
+  a = 0; @b = 1; x = {a, @b, 2, \3, +4, -5}
   eq x.a, 0
   eq x.b, 1
   eq x.2, 2
   eq x.3, \3
+  eq x.4, true
+  eq x.5, false
   c = null; d = 0; y = {a || 1, @b && 2, c ? 3, d !? 4}
   eq y.a, 1
   eq y.b, 2
   eq y.c, 3
   eq y.d, 4
+  z = {true, false, null, void, this, arguments, eval, -super, +debugger}
+  eq z.true      , true
+  eq z.false     , false
+  eq z.null      , null
+  eq z.void      , void
+  eq z.this      , this
+  eq z.arguments , arguments
+  eq z.eval      , eval
+  eq z.super     , false
+  eq z.debugger  , true
 
 
 # [coffee#542](https://github.com/jashkenas/coffee-script/issues/542):
@@ -171,8 +173,9 @@ new
 
 
 # [#19](https://github.com/satyr/coco/issues/19)
-throws 'duplicate property name "a" on line 1'
-, -> Coco.compile '{a, b, a}'
+compileThrows 'duplicate property "a"' 1 '{a, b, a}'
+compileThrows 'duplicate property "0"' 1 '{0, "0"}'
+compileThrows 'duplicate property "1"' 1 '{1, 1.0}'
 
 
 #### Implicit/Braceless
@@ -280,9 +283,13 @@ o = q: 1 if false
 ok \q not in o
 
 
-# Inline with assignment.
-p: o = q: 0
-eq o.q, 0
+# Inline with assignment/import.
+o =
+  p: t =   q: 0
+  r: t <<< s: 1
+eq o.p, o.r
+eq o.p.q, 0
+eq o.r.s, 1
 
 
 #### Dynamic Keys
@@ -354,6 +361,9 @@ i = 3
 while --i then while --i then `break LABEL`
 eq i, 1
 
+`not` = -> !it
+eq false `not` true
+
 
 ### String/Array multiplication
 x = \x
@@ -392,6 +402,38 @@ o = {0 \1 \2 3 4 (5)}
 eq o.1, \1
 eq o.3, 3
 eq o.5, 5
+
+
+### Numeric/Character Ranges
+show = -> @@ * ' '
+
+eq '-1 0 1 2' show -1 to +2
+eq '1 0 -1'   show +1 to -1 by -1
+
+eq '999 1000' show 999     til 1001
+eq '1e-9'     show 1e-9    til 1e-8
+eq '9999999'  show 9999999 til 1e7
+eq '10000000' show 1e7     til 9999999 by -1
+eq '1 2 3'    show 1       til 3.00001
+
+eq '0.5 0.75 1' show 0.5 til 1.2 by 0.25
+
+til = String
+eq 2, [Number]0 til 2
+
+eq 'A F K P U Z' show \A to  \Z by 5
+eq 'y u q m i e' show \y til \a by -4
+
+ok \\u2028 to \\u2029
+
+compileThrows 'range limit exceeded' 2 '\n0 to 1 by 1e-5'
+compileThrows 'empty range' 2 '\n1 to 0'
+compileThrows 'empty range' 2 '\n1 til 1'
+compileThrows 'empty range' 2 '\n2 to 3 by -1'
+compileThrows 'bad "to" in range' 2 '\n0 to "q"'
+compileThrows 'bad "to" in range' 2 '\n1 to i'
+compileThrows 'bad "by" in range' 2 '\n0 to 9 by "2"'
+compileThrows 'bad string in range' 2 '\n"a" to "bc"'
 
 
 ### Misc

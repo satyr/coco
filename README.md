@@ -14,7 +14,7 @@ keywords, verbose file extension,
 Coco tries to amend them, entwining good parts of both.
 
 ## Principles
-- Respect JavaScript/ECMAScript semantics.
+- Respect JS semantics and idioms.
 - Die for [DRY](http://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
 - Perl over Ruby.
 - Fewer keywords, punctuations and runtime errors.
@@ -33,14 +33,53 @@ Coco tries to amend them, entwining good parts of both.
 - [TextMate Bundle](https://github.com/dsc/coco-tmbundle)
 
 ## Installation
+Get [Node.js](http://nodejs.org) and [npm](http://npmjs.org), then:
 
-### on [Node.js](http://nodejs.org)
-`git clone git://github.com/satyr/coco.git && cd coco && bin/coke i`
-
-### via [npm](http://npmjs.org)
-`npm i -g coco`
+- `npm i -g coco`
+- `git clone git://github.com/satyr/coco.git && cd coco && bin/coke i`
 
 ## Changelog
+
+### 0.7.4
+- Added `import` declaration in place of the implicit `this import`:
+  `import a, b` => `this <<< a <<< b`
+- Made `super` work in accessor methods.
+- Disallowed redeclarations via `var`.
+- Improved handling of nonexistent files.
+
+### 0.7.3
+- Node.js 0.8.x.
+- Added `const` and `var`. ([#139](https://github.com/satyr/coco/issues/139))
+- Made `function` variables read-only.
+- Removed `-n` shorthand for `--nodejs`.
+  ([#142](https://github.com/satyr/coco/issues/142))
+- Bug fixes:
+  - `super` with nested classes and methods
+  - `f a, while b then c` etc.
+  - and others:
+    [#138](https://github.com/satyr/coco/issues/138)
+    [#141](https://github.com/satyr/coco/issues/141)
+    [#143](https://github.com/satyr/coco/issues/143)
+
+### 0.7.2
+- Revised accessor. ([#5](https://github.com/satyr/coco/issues/5))
+- Allowed implicit array after some unary operators.
+- Added named backcall: `<-:f g` => `g(:f ->)`
+- Made `{[q]:p}` short for `{p: [q]:p}`.
+
+### 0.7.1
+- Added `export` statement. ([#121](https://github.com/satyr/coco/issues/121))
+- Made `{{q}:p}` short for `{p: {q}:p}`.
+- Allowed keyword literals as object shorthand: `{true}` => `{true: true}`
+- Allowed decimals and `$` in number comments.
+- Removed uppercase radix prefixes and exponential notation as per
+  [coffee#2061](https://github.com/jashkenas/coffee-script/issues/2061).
+- Labelling a function (literal or IIFE sugar) now names it.
+  E.g. `:f ->` compiles to `(function f(){})`.
+- `super` call to a bound class now works as expected.
+- All compiler-generated variables are now double-underscore prefixed.
+- `--interactive` no longer implies `--bare`.
+  Use `-bi` when you want top-level variables to persist.
 
 ### 0.7.0
 - Caught up Node.js 0.6.x.
