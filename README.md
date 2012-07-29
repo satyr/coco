@@ -29,6 +29,10 @@ Coco tries to amend them, entwining good parts of both.
 - [Glossary](https://github.com/satyr/coco/wiki/glossary)
 - [Annotated Source](http://satyr.github.com/coco/src/)
 
+## Tools
+- [Web Console](http://satyr.github.com/cup/)
+- [TextMate Bundle](https://github.com/dsc/coco-tmbundle)
+
 ## Installation
 Get [Node.js](http://nodejs.org) and [npm](http://npmjs.org), then:
 
