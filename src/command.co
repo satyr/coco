@@ -8,9 +8,9 @@ global import
   fs   : require \fs
   path : require \path
   util : require \util
-  say  : !-> process.stdout.write it + \\n
-  warn : !-> process.stderr.write it + \\n
-  die  : !-> warn it; process.exit 1
+  say  : !-> fs.writeSync 2, it + \\n
+  warn : !-> fs.writeSync 2, it + \\n
+  die  : !-> warn it; process.exit 2
   p    : !-> []forEach.call @@, console.dir
   pp   : !(x, showHidden, depth) ->
     say util.inspect x, showHidden, depth, !process.env.NODE_DISABLE_COLORS
