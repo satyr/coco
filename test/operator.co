@@ -429,6 +429,9 @@ String 0
 eq void,
   -> |> _ _ |> _
 
+_ = \unclobbered
+\clobbered |> _.toUpperCase! |> _.toLowerCase!
+eq \unclobbered _
 
 ### Listar
 * 0, 1

@@ -214,8 +214,6 @@ class exports.Block extends Node
     @lines.splice @neck!, 0, ...arguments
     this
 
-  pipe: -> @lines.push Assign(Var \_; @lines.pop!), it; this
-
   unwrap: -> if @lines.length is 1 then @lines.0 else this
 
   # Removes trailing comment nodes.
@@ -341,7 +339,9 @@ class exports.Var extends Atom
 
   varName: ::show
 
-  compile: (o) -> if @temp then o.scope.free @value else @value
+  compile: (o) ->
+    @value = o.pipee if o.pipee? and @value is \_ # don't clobber _ within pipes
+    if @temp then o.scope.free @value else @value
 
 #### Key
 # A property name in the form of `{key: _}` or `_.key`.
@@ -1909,6 +1909,24 @@ class exports.Label extends Node
     "#label: " + if it instanceof Block
       then o.indent += TAB; @compileBlock o, it
       else it.compile o
+
+#### Pipe
+# A construction that binds the result of the left-hand expression to _ for the
+# right-hand expression, and results in the right-hand expression
+class exports.Pipe extends Node
+  (@left, @right) ~>
+
+  compileNode: (o) ->
+    first-pipe = o.pipee!?
+    o.pipee = o.scope.temporary \_ if first-pipe
+
+    t = o.pipee + ' = ' + @left.compile o, LEVEL_LIST
+    right = @right.compile o
+    code = if o.level then "(#t, #right)" else "#t;\n#right"
+
+    o.scope.free delete o.pipee if first-pipe
+
+    code
 
 #### Cascade
 # A construction that allows `&`-references to target expression.
