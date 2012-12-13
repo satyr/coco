@@ -79,13 +79,15 @@ default
 # compile them. If a directory is passed, recursively compile all
 # _.co_ files in it and all subdirectories.
 !function compileScripts
+  co = /\.(?:co)+(?:on)?$/
   $args.forEach !-> walk it, path.normalize(it), true
   !function walk source, base, top
     !function work
       fshoot \readFile source, !-> compileScript source, "#it", base
     e, stats <-! fs.stat source
     if e
-      die "Can't find: #source" if not top or /(?:\.co|\/)$/test source
+      if not top or co.test source or \/ is source.slice -1
+        die "Can't find: #source"
       walk "#source.co" base
       return
     if stats.isDirectory!
@@ -93,7 +95,7 @@ default
         fshoot \readdir source, !-> it.forEach !-> walk "#source/#it" base
         return
       source += \/index.co
-    if top or \.co is source.slice -3
+    if top or co.test source
       if o.watch then watch source, work else work!
 
 # Compile a single source script, containing the given code, according to the
@@ -109,27 +111,28 @@ default
       throw
     Coco.emit \parse t
     t.ast = Coco.ast t.tokens
+    json  = o.json or /\.(?:json\.co|(?:co)+on)$/test filename
     if o.ast
-      say if o.json then t.ast.stringify 2 else ''trim.call t.ast
+      say if json then t.ast.stringify 2 else ''trim.call t.ast
       throw
     Coco.emit \compile t
-    options.bare ||= o.json or o.run
-    t.ast.makeReturn! if o.json or o.run and o.print
+    options.bare ||= json or o.run
+    t.ast.makeReturn! if json or o.run and o.print
     t.output = t.ast.compileRoot options
-    if o.json or o.run
+    if json or o.run
       Coco.emit \run t
       t.result = Coco.run t.output, options, true
-    if o.json
+    if json
       t.output = JSON.stringify(t.result, null, 2) + \\n
     if o.run
       switch
-      case o.json  then process.stdout.write t.output
+      case json    then process.stdout.write t.output
       case o.print then console.log t.result
       throw
     Coco.emit \write t
     if o.print or not filename
     then say t.output.trimRight!
-    else writeJS filename, t.output, base
+    else writeJS filename, t.output, base, json
   catch if e?
     if Coco.listeners(\failure)length
       Coco.emit \failure e, t
@@ -161,11 +164,11 @@ default
 # Write out a JavaScript source file with the compiled code. By default, files
 # are written out in `cwd` as `.js` files with the same name, but the output
 # directory can be customized with `--output`.
-!function writeJS source, js, base
+!function writeJS source, js, base, json
   #     foo.co     => foo.js
   #     foo.jsm.co => foo.jsm
   filename = path.basename(source)replace do
-    /(?:(\.\w+)?\.\w+)?$/ -> @@1 or if o.json then \.json else \.js
+    /(?:(\.\w+)?\.\w+)?$/ -> @@1 or if json then \.json else \.js
   dir = path.dirname source
   if o.output
     dir = path.join that, dir.slice if base is \. then 0 else base.length
