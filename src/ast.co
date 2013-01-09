@@ -1849,6 +1849,10 @@ class exports.If extends Node
   ::delegate <[ isCallable isArray isString isRegex ]> ->
     @else?[it]! and @then[it]!
 
+  maybeUnlessBlock: (@un) ->
+    un and @else instanceof If and @else.maybeUnlessBlock true
+    this
+
   getJump: -> @then.getJump it or @else?getJump it
 
   makeReturn: ->

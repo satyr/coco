@@ -182,6 +182,7 @@ bnf =
 
     # The full complement of `if` and `unless` expressions
     o 'IF Expression Block Else'      -> If $2, $3, $1 is \unless .addElse $4
+    o 'IF INDENT IfLines DEDENT'      -> $3.maybeUnlessBlock $1 is \unless
     # and their postfix forms.
     o 'Expression POST_IF Expression' -> If $3, $1, $2 is \unless
 
@@ -300,6 +301,10 @@ bnf =
 
     o 'WHILE Expression'              -> new While $2, $1 is \until
     o 'WHILE Expression , Expression' -> new While $2, $1 is \until, $4
+
+  IfLines:
+    o 'Expression Block Else'            -> If $1, $2 .addElse $3
+    o 'Expression Block NEWLINE IfLines' -> If $1, $2 .addElse $4
 
   Cases:
     o       'CASE Exprs Block' -> [new Case $2, $3]

@@ -47,8 +47,10 @@ default
   o.run = not o.compile ||= o.output
   process.execPath = argv.0 = argv.1
   argv.splice 2 9e9
-  argv.push ...if o.stdin then $args else
-    if o.run then $args.splice 1 9e9 else []
+  argv.push ...if
+    o.stdin => $args
+    o.run   => $args.splice 1 9e9
+    else    => []
   if o.require
     ({filename} = module)filename = \.
     that.forEach require

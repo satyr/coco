@@ -112,6 +112,27 @@ eq 2, [if 1 then 2       , 3].0
 eq 2, [if 0 then 1 else 2, 3].0
 
 
+# Soaks should not `that`-aware.
+a = [0 1]
+if 1
+  eq 1 a?[that]
+
+
+### `if`-block
+if
+  false
+    ok false
+  true
+    unless
+      true  => ok false
+      false => ok true
+  else
+    ok false
+
+eq 1, if
+  0 => 0
+  else 1
+
 # Compile conditonal expression chains neatly.
 eq '''
 var r;
@@ -121,8 +142,10 @@ r = a
     ? d
     : e();
 ''' Coco.compile '''
-r =    if a then b
-  else if c then d else e!
+r = if
+  a then b
+  c then d
+  else e!
 ''' {+bare}
 
 
@@ -149,8 +172,3 @@ if 1
     5 if that
 that if 6?
 ''', {+bare}
-
-# Soaks should not `that`-aware.
-a = [0 1]
-if 1
-  eq 1 a?[that]
