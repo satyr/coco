@@ -1950,8 +1950,8 @@ class exports.Pipe extends Node
     then input <<< {ref}
     else input &&= Assign Var(ref), input
     o.level &&= LEVEL_PAREN
-    code = input.compile o
-    out  = Block output .compile o <<< ref: new String ref
+    code = input .compile o
+    out  = output.compile o <<< ref: new String ref
     @carp "unreferred cascadee" if prog1 is \cascade and not o.ref.erred
     return "#code#{input.terminator}\n#out" unless level
     code += ", #out"

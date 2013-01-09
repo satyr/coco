@@ -870,10 +870,10 @@ character = if JSON!? then uxxxx else ->
     detectEnd tokens, ++i+1, ok, go
   function ok token, i
     switch tag = token.0
-    case \,                   then break
-    case \NEWLINE             then return true if inline
-    case \DEDENT              then return true
-    case \POST_IF \FOR \WHILE then return inline
+    case \,       then break
+    case \NEWLINE then return true if inline
+    case \DEDENT  then return true
+    case \POST_IF \FOR \WHILE \|> then return inline
     default return false
     t1 = tokens[i+1]?0
     t1 is not (if tag is \, then \NEWLINE else \COMMENT) and
