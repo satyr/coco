@@ -437,21 +437,10 @@ eq 1, n & -n
 compileThrows 'stray reference' 2 '\n&'
 
 #### Pipe
-Array 0 |> &concat 1, 2
-        |> & <<<  {3: 4}
-        |> eq '1,2,,4' "#&"
+# => [operator](#operator)
 
-String 0
-|> if & then &+& else &*&
-|> eq \00 &
-
-eq void,
-  -> |> & & |> &
-
-funs =
-   2 |> -> &
-   3 |> -> &
-eq 6, funs.0! * funs.1!
+#### Quick Map
+# => [loop](#loop)
 
 #### `with`
 a = with [2 7 1 8 2]
@@ -469,9 +458,3 @@ eq
   ok &valueOf!
 
 compileThrows 'unreferred cascadee' 1 'a => b'
-
-#### Quick Map
-eq \2718,
-  for [1 6 0 7]
-    & + 1
-  .join ''

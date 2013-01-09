@@ -326,7 +326,7 @@ exports import
       [tag, val] = last
       if tag is \ASSIGN  and val+'' not of <[ = := += ]>
       or tag is \BITWISE and val is not \&
-      or tag of <[ +- |> DOT LOGIC MATH COMPARE RELATION SHIFT
+      or tag of <[ +- DOT LOGIC MATH COMPARE RELATION SHIFT
                    IN OF TO BY FROM EXTENDS IMPLEMENTS ]>
         return length
       if delta then @indent delta else @newline!

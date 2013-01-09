@@ -458,6 +458,28 @@ ok o.2 is o.5 is void
 eq '8,9' ''+ -~[7 8]
 
 
+#### Pipe
+Array 0 |> &concat 1, 2
+        |> & <<<  {3: 4}
+        |> x+5 for x of &
+        |> eq '6,7,NaN,9' "#&"
+
+String 0
+|>
+  if &
+  then &+&
+  else &*&
+|> eq \00 &
+
+eq void,
+  -> |> & & |> &
+
+funs =
+   2 |> -> &
+   3 |> -> &
+eq 6, funs.0! * funs.1!
+
+
 ### Overloaded
 a = b = [0 1]
 

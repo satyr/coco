@@ -171,6 +171,7 @@ bnf =
                             else Binary $2         , $1, $3
 
     o 'Expression |> Expression' -> Pipe $1, $3
+    o 'Expression |> Block'      ditto
 
     o 'Chain !?' -> Existence $1.unwrap!, true
 
@@ -319,7 +320,8 @@ bnf =
 # and `x = y = z` `x = (y = z)` (not `(x = y) = z`).
 operators =
   # Listed from lower precedence.
-  <[ left     |> POST_IF FOR WHILE ]>
+  <[ left     |> ]>
+  <[ left     POST_IF FOR WHILE ]>
   <[ right    , ASSIGN HURL EXTENDS INDENT SWITCH CASE TO BY LABEL ]>
   <[ right    LOGIC        ]>
   <[ left     ^ BITWISE    ]>

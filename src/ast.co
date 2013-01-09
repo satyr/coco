@@ -1938,12 +1938,13 @@ class exports.Pipe extends Node
 
   compileNode: ({level}:o) ->
     {input, output, prog1, ref} = this
+    output = Block output .chomp!
     if prog1 and (\ret in this or level and not @void)
       output.add (Literal \& => &cascadee = true)
     if \ret in this
       output.=makeReturn @ret
     if ref
-    then prog1 or output = Assign Var(ref), output
+    then prog1 or with output.lines => &push Assign Var(ref), &pop!
     else ref = o.scope.temporary \x
     if input instanceof Pipe
     then input <<< {ref}
