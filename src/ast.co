@@ -321,9 +321,10 @@ class exports.Literal extends Atom
       @carp 'invalid use of ' + @value if level is LEVEL_CALL
     case \debugger then if level
       return "(function(){\n#TAB#{o.indent}debugger;\n#{o.indent}}())"
-    case \* then @carp 'stray star'
+    case \*
+      @carp 'stray *'
     case \&
-      @carp 'stray reference' unless val = o.ref
+      @carp 'stray &' unless val = o.ref
       @cascadee or val.erred = true
     val
 

@@ -89,7 +89,7 @@ eq 1, a[0][*-*]
 eq 2, a[--*-1]
 eq 2, a.length
 
-compileThrows 'stray star' 1 '[*-1]'
+compileThrows 'stray *' 1 '[*-1]'
 
 
 # Binding Access

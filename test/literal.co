@@ -434,7 +434,7 @@ eq 1, n & n
 eq 1, n&-n
 eq 1, n & -n
 
-compileThrows 'stray reference' 2 '\n&'
+compileThrows 'stray &' 2 '\n&'
 
 #### Pipe
 # => [operator](#operator)
