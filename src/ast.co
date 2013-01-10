@@ -1924,7 +1924,7 @@ class exports.Label extends Node
       else it.compile o
 
 #### Pipe
-# Passes input to output via `&`-references.
+# Passes input to output via the `&` literal aka _ref_.
 class exports.Pipe extends Node
   (@input, @output, @prog1) ~>
 
