@@ -439,6 +439,10 @@ compileThrows 'stray reference' 2 '\n&'
 #### Pipe
 # => [operator](#operator)
 
+0 |> let
+  eq 0 &
+  1 |> eq 1 &
+
 #### Quick Map
 # => [loop](#loop)
 

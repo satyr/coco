@@ -1678,7 +1678,7 @@ class exports.For extends While
         then "#idx #{ '<>'charAt pvar < 0 }#eq #tvar"
         else "#pvar < 0 ? #idx >#eq #tvar : #idx <#eq #tvar"
     else
-      @ref and @item = Var o.scope.temporary \x
+      @ref and @item = Var o.scope.reference!
       if @item or @object and @own
         [svar, srcPart] = @source.compileLoopReference o, \ref, not @object
         svar is srcPart or temps.push svar
@@ -1949,7 +1949,7 @@ class exports.Pipe extends Node
       output.=makeReturn @ret
     if ref
     then prog1 or with output.lines => &push Assign Var(ref), &pop!
-    else ref = o.scope.temporary \x
+    else ref = o.scope.reference!
     if input instanceof Pipe
     then input <<< {ref}
     else input &&= Assign Var(ref), input
@@ -2093,6 +2093,11 @@ Scope::<<<
         then String.fromCharCode name.charCodeAt! + 1
         else name.replace /\d*$/ -> ++it
     @add name + \$, \var
+
+  # Sets up a reference variable that works across scopes.
+  reference: ->
+    continue while @check name = "x#{-~=i-1}$", true
+    @add name, \var
 
   # Allows a variable to be reused.
   free: (name) -> @add name, \reuse
