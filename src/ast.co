@@ -93,7 +93,7 @@
       if (base = this)[name = @aSource] instanceof Existence
         base.=[name]; name = \it
       unless base[name]value is \that
-        base[name] = Assign Var(\that), base[name]
+        base[name] = Assign Var(\that), <>
     function hasThat
       it.value is \that or if it.aSource
       then hasThat that if it[that]
@@ -246,7 +246,7 @@ class exports.Block extends Node
     return @compileExpressions o, level if level
     o.block = this; tab = o.indent
     codes = for node of @lines
-      node = node.unfoldSoak o or node
+      node = <>unfoldSoak o or <>
       continue unless code = (node <<< {+front})compile o, level
       node.isStatement! or code += node.terminator
       tab + code
@@ -302,11 +302,11 @@ class exports.Literal extends Atom
     return JS "#value" true if value.js
     return new Super        if value is \super
 
-  isEmpty    : -> @value of <[ null void   ]>
-  isCallable : -> @value of <[ this eval & ]>
+  isEmpty    : -> @value of <[ null void ]>
+  isCallable : -> @value of <[ this eval & <> ]>
   isString   : -> 0 <= '\'"'indexOf "#{@value}"charAt!
   isRegex    : -> "#{@value}"charAt! is \/
-  isComplex  : -> @isRegex! or @value is \debugger
+  isComplex  : -> @isRegex! or @value of <[ debugger <> ]>
 
   varName: -> if /^\w+$/test @value then \$ + @value else ''
 
@@ -321,8 +321,8 @@ class exports.Literal extends Atom
       @carp 'invalid use of ' + @value if level is LEVEL_CALL
     case \debugger then if level
       return "(function(){\n#TAB#{o.indent}debugger;\n#{o.indent}}())"
-    case \*
-      @carp 'stray *'
+    case \* \<>
+      @carp "stray #val"
     case \&
       @carp 'stray &' unless val = o.ref
       @cascadee or val.erred = true
@@ -407,7 +407,7 @@ class exports.Chain extends Node
       else if not @tails.1 and it.key?name is \prototype
         @head.sproto = true
     if delete it.vivify
-      @head = Assign Chain(@head, @tails.splice 0, 9e9), that!, \= \||
+      @head = Assign Chain(<>, @tails.splice 0, 9e9), that!, \=, \||
     this
 
   # __Chain__ can be unwrapped as its inner node, if there are no subnodes.
@@ -462,14 +462,14 @@ class exports.Chain extends Node
     # `a().b`
     if base.isComplex!
       ref  = o.scope.temporary!
-      base = Chain Assign Var(ref), base
+      base = Chain Assign Var(ref), <>
       bref = Var(ref) <<< {+temp}
-    # `a{}`
+    # `a()`
     return [base, bref] unless name
     # `a[b()]`
     if name.isComplex!
       ref  = o.scope.temporary \key
-      name = Index Assign Var(ref), name.key
+      name = Index Assign Var(ref), <>key
       nref = Index Var(ref) <<< {+temp}
     [base.add name; Chain bref || base.head, [nref or name]]
 
@@ -704,7 +704,7 @@ class exports.Obj extends List
       else
         "#{ key = node.compile o }: #key"
       # Canonicalize the key, e.g.: `0.0` => `0`
-      ID.test key or key = do Function "return #key"
+      ID.test key or key = do Function "return #<>"
       node.carp "duplicate property \"#key\"" unless dic"#key." ^= 1
     code = "{#{ code and code + \\n + @tab }}"
     rest and code = Import(JS code; Obj rest)compile o <<< indent: @tab
@@ -1075,15 +1075,27 @@ class exports.Assign extends Node
       left.=first
     return @compileDestructuring o, left if left.items
     left.isAssignable! or left.carp 'invalid assign'
-    return @compileConditional   o, left if @logic
     {op, right} = this
-    return @compileMinMax o, left, right if op of <[ <?= >?= ]>
     if op is \**=
     or op is \*= and right.isString!
     or op of <[ -= /= ]> and right.isMatcher!
-      [left, reft] = Chain(left)cacheReference o
-      right = Binary op.slice(0 -1), reft, right
+      right = Binary(op.slice 0 -1; Literal \<>; <>)
       op    = \:=
+    minmax = op of [\<?= \>?=]
+    lefseek right, lefs = []
+    if lefs.0
+      [left, reft] = Chain left .cacheReference o
+      if minmax or @logic
+        [left, ref, @temps] = left.cache o
+        ref.=compile o
+      else if lefs.1
+        [lefs.shift!value, ref] = reft.cache o, false, LEVEL_CALL
+        @temps = [ref]
+      else
+        ref = reft.compile o
+      for lefs => &value = ref
+    return @compileMinMax      o, left, right, reft if minmax
+    return @compileConditional o, left, right, reft if @logic
     (right.=unparen!)ripName left.=unwrap!
     code = name = (left <<< {+front})compile o, LEVEL_LIST
     if lvar = left instanceof Var
@@ -1106,20 +1118,30 @@ class exports.Assign extends Node
       code  = "(#code)" if that > (if del then LEVEL_PAREN else LEVEL_LIST)
     code
 
-  compileConditional: (o, left) ->
+  !function lefseek node, lefs
+    return if node.lefsought
+    node.lefsought = true
+    node.=left if node instanceof Assign
+    return if node instanceof Fun
+           or node.value is \<> and lefs.push node
+    node.eachChild -> lefseek it, lefs
+
+  compileConditional: (o, left, right, reft) ->
     if left instanceof Var and @logic of <[ ? !? ]> and @op is \=
       o.scope.declare left.value, left
-    lefts = Chain(left)cacheReference o
     # Deal with `a && b ||= c`.
     o.level += LEVEL_OP < o.level
-    morph = Binary @logic, lefts.0, @<<<{-logic, left: lefts.1}
-    (morph <<< {@void})compileNode o
+    reft or [left, reft] = Chain left .cacheReference o
+    # Transform to `left || reft = right`.
+    Binary @logic, left, @<<<{-logic, left: reft}
+    |> & <<< {@void}
+    |> &compileNode o
 
-  compileMinMax: (o, left, right) ->
-    lefts = Chain(left)cacheReference o
+  compileMinMax: (o, left, right, reft) ->
+    reft or [left, reft] = Chain left .cacheReference o
     rites = right.cache o, true
-    test  = Binary @op.replace(\? ''), lefts.0, rites.0
-    put   = Assign lefts.1, rites.1, \:=
+    test  = Binary @op - \?, left, rites.0
+    put   = Assign reft, rites.1, \:=
     # `a <?= b` => `a <= b || a = b `
     return Parens(Binary \|| test, put)compile o if @void or not o.level
     # `r = a <?= b` => `r = if a <= b then a else a = b`
@@ -1949,7 +1971,7 @@ class exports.Pipe extends Node
     if \ret in this
       output.=makeReturn @ret
     if ref
-    then prog1 or with output.lines => &push Assign Var(ref), &pop!
+    then prog1 or output.lines[*-1] = Assign Var(ref), <>
     else ref = o.scope.reference!
     if input instanceof Pipe
     then input <<< {ref}

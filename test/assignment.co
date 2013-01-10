@@ -351,3 +351,23 @@ compileThrows 'accidental shadow of "a"' 3 '''
   let => a := 2
          a  = 3
 '''
+
+
+### Lef
+a = 2
+
+a = 4 / <>
+eq a, 2
+
+a = <> * <>
+eq a, 4
+
+a <?= -<>
+eq a, -4
+
+o = p: q: \r
+o.p[String \q].=replace /^|$/g "<#<>>"
+eq o.p.q, '<r>r<r>'
+
+for ['<>' '[a] = <>' 'f = -> <>']
+  compileThrows 'stray <>' 1 &

@@ -425,6 +425,9 @@ exports import
         else break
         return 1
       tag = \UNARY
+    case \<>
+      @token \LITERAL \<> true
+      return 2
     case \&
       unless able @tokens
         @token \LITERAL \& true
@@ -522,7 +525,9 @@ exports import
         return parts <<< size: pos + i + end.length
       case \#
         c1 = str.charAt i+1
-        id = c1 of <[ @ & ]> and c1 or (ID <<< lastIndex: i+1)exec str .1
+        id = c1 of <[ @ & ]> and c1
+          or c1 is \< and \> is str.charAt i+2 and \<>
+          or (ID <<< lastIndex: i+1)exec str .1
         continue unless id or c1 is \{
       case \\ then ++i; fallthrough
       default continue
@@ -532,7 +537,7 @@ exports import
       if id
         {length} = id
         id = \this if id is \@
-        if id of <[ this & ]>
+        if id of <[ this & <> ]>
           tag = \LITERAL
         else
           id = camelize id
@@ -988,8 +993,8 @@ SYMBOL = //
 | ([-+&|@:])\1               # crement / logic / `prototype` / `arguments`
 | [-~=|]>                    # (bound-)function / inlinedent / pipe
 | [!=]==?                    # equality
-| <(?: <(?:=|<{0,2}) | [-~]
-     | \[(?:[\s\S]*?\]>)? )  # left shift / import / backcall / words
+| <(?: <(?:=|<{0,2}) | [-~>]
+     | \[(?:[\s\S]*?\]>)? )  # left shift / import / backcall / lef / words
 | >>>?=?                     # rite shift
 | [<>]\??=?                  # {less,greater}-than(-or-equal-to) / min/max
 | !\?                        # inexistence
