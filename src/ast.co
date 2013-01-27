@@ -972,9 +972,11 @@ class exports.Binary extends Node
     if @op is \!?
       _ = If(Existence @first; @second) <<< {@cond, @void or not o.level}
       return _.compileExpression o
-    if @void or not o.level
+    # Skip caching if the result is condition or discarded.
+    if @cond or @void ||= not o.level
+      # `f() ? g()` => `f()!? and g()`
       _ = Binary \&& Existence(@first, true), @second
-      return (_ <<< {+void})compileNode o
+      return (_ <<< {@cond, @void})compileNode o
     _ = @first.cache o, true
     If(Existence _.0; _.1)addElse(@second)compileExpression o
 
