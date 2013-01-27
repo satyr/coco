@@ -172,3 +172,8 @@ if 1
     5 if that
 that if 6?
 ''', {+bare}
+
+let that = 42
+  let
+    that if that
+    eq void that

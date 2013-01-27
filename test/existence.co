@@ -176,6 +176,16 @@ eq void do  A?
 {}frontness?
 
 
+# Can be `that` target, assigning the operand.
+a = 0
+eq that, a if a?
+
+if nondeclared?
+  ok not that
+else
+  ok true
+
+
 ### Soak Assign
 a = [0 null]
 

@@ -90,10 +90,15 @@
   anaphorize: ->
     @children = @aTargets
     if @eachChild hasThat
-      if (base = this)[name = @aSource] instanceof Existence
-        base.=[name]; name = \it
-      unless base[name]value is \that
-        base[name] = Assign Var(\that), <>
+      @[@aSource] = if
+        <> instanceof Existence
+          if <>it instanceof Var
+          # `that if a?`  => `that if that = (a if a?)`
+          then Assign Var(\that), If <>, <>it
+          # `that if @a?` => `that if (that = @a)?`
+          else Existence Assign Var(\that), <>it
+        else
+          Assign Var(\that), <>
     function hasThat
       it.value is \that or if it.aSource
       then hasThat that if it[that]
