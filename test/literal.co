@@ -362,16 +362,14 @@ eq 11, ((, a) -> a)(, 11)
 
 
 ### JS Literal
+ok `delete ! delete {}`
 
-eq '\\`', `
+# multi{line,tick}
+eq \` ``'`'``
+eq '``' ```
   // Inline JS
-  "\\\`"
-`
-
-i = 3
-`LABEL:`
-while --i then while --i then `break LABEL`
-eq i, 1
+  '``'
+```
 
 `not` = -> !it
 eq false `not` true

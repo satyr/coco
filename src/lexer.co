@@ -244,9 +244,10 @@ exports import
 
   # Matches embedded JavaScript.
   doJS: (code, JSTOKEN.lastIndex) ->
-    js = JSTOKEN.exec code .0 or @carp 'unterminated JS literal'
-    @token \LITERAL Object(detab js.slice(1 -1), @dent) <<< {+js}, true
-    @countLines(js)length
+    [lit,, js] = JSTOKEN.exec code
+    lit or @carp 'unterminated JS literal'
+    @token \LITERAL Object(detab js, @dent) <<< {+js}, true
+    @countLines(lit)length
 
   # Matches a regular expression literal aka _regex_,
   # disambiguating from division operators.
@@ -1004,8 +1005,8 @@ SYMBOL = //
 SPACE     = /[^\n\S]*(?:#.*)?/g
 MULTIDENT = /(?:\s*#.*)*(?:\n([^\n\S]*))+/g
 SIMPLESTR = /'[^\\']*(?:\\[\s\S][^\\']*)*'|/g
-JSTOKEN   = /`[^\\`]*(?:\\[\s\S][^\\`]*)*`|/g
 BSTOKEN   = // \\ (?: (\S[^\s,;)}\]]*) | \s* ) //g
+JSTOKEN   = /(`+)([^`][\s\S]*?)\1|/g
 
 NUMBER = //
   0x[\dA-Fa-f][\dA-Fa-f_]*                 # hex
