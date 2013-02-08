@@ -459,7 +459,7 @@ class exports.Chain extends Node
   cacheReference: (o) ->
     name = @tails[*-1]
     # `a` `a.b()`
-    return @cache o if not name or name instanceof Call
+    return @unwrap!cache o if not name or name instanceof Call
     # `a.b`
     if @tails.length < 2 and not @head.isComplex! and not name.isComplex!
       return [this] * 2
@@ -1082,22 +1082,24 @@ class exports.Assign extends Node
       right = Binary(op.slice 0 -1; Literal \<>; <>)
       op    = \:=
     minmax = op of [\<?= \>?=]
-    lefseek right, lefs = []
-    if lefs.0
+    lvar   = left instanceof Var
+    lefseek right, lefs = [] unless lvar and \$ is left.value.slice -1
+    if lefs?0
       [left, reft] = Chain left .cacheReference o
       if minmax or @logic
         [left, ref] = left.cache o
         ref.=compile o
-      else if lefs.1
-        [lefs.shift!value, ref] = reft.cache o, LEVEL_CALL
       else
-        ref = reft.compile o
+        lefs.0.isComplex = if lvar then NO else YES
+        if lefs.1
+        then [lefs.shift!value, ref] = reft.cache o, LEVEL_CALL
+        else ref = reft.compile o
       for lefs => &value = ref
     return @compileMinMax      o, left, right, reft if minmax
     return @compileConditional o, left, right, reft if @logic
     (right.=unparen!)ripName left.=unwrap!
     code = name = (left <<< {+front})compile o, LEVEL_LIST
-    if lvar = left instanceof Var
+    if lvar
       if op is \=
         o.scope.declare name, left, @const
       else if o.scope.checkReadOnly name
@@ -1194,6 +1196,7 @@ class exports.Assign extends Node
       node.=first if logic = node.getDefault!
       if node instanceof Parens
         [node, key] = Chain(node.it)cacheReference o
+        key = Parens <>
       else if node instanceof Prop
       then node = ({key} = node)val
       else key  = node
