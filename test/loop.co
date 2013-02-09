@@ -330,6 +330,8 @@ eq 0 r.0
 r = for i til 0 then i else [9]
 eq 9 r.0
 
+eq void, while 0 then else
+
 
 ### Omission of `for`'s first assignment
 eq i, 0 for    , i of [0]

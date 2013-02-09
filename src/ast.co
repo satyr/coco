@@ -1658,7 +1658,7 @@ class exports.While extends Node
     if @returns
       lines[*-1]?=makeReturn res = o.scope.assign \results$ '[]'
       ret = "\n#{tab}return #{ res or '[]' };"
-      @else?makeReturn!
+      yet and @else.makeReturn!lines.0 ||= Return!
     yet and lines.unshift JS "#yet = false;"
     code += "\n#that\n#tab" if @body.compile o, LEVEL_TOP
     code += \}
