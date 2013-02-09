@@ -437,10 +437,6 @@ class exports.Chain extends Node
     return false if tail.assign for tail of @tails
     true
 
-  # `@$` `o.0`
-  isSimpleAccess: ->
-    @tails.length is 1 and not @head.isComplex! and not @tails.0.isComplex!
-
   makeReturn: -> if @tails.length then super ... else @head.makeReturn it
 
   getCall: -> (tail = @tails[*-1]) instanceof Call and tail
@@ -463,7 +459,7 @@ class exports.Chain extends Node
     # `a.b`
     if @tails.length < 2 and not @head.isComplex! and not name.isComplex!
       return [this] * 2
-    base = Chain @head, @tails.slice 0 -1
+    base = Chain @head, @tails.slice 0 -1 .unwrap!
     # `a().b`
     [base, bref] = base.cache o if base.isComplex!
     # `a[b()]`
@@ -472,7 +468,7 @@ class exports.Chain extends Node
         name = Index Assign &, <>key
         nref = name.cached = Index &
     * Chain base .add name
-      Chain bref || base.head, [nref or name]
+      Chain bref || base, [nref or name]
 
   compileNode: (o) ->
     {head, tails} = this; head <<< {@front, @newed}
@@ -1098,6 +1094,9 @@ class exports.Assign extends Node
     return @compileMinMax      o, left, right, reft if minmax
     return @compileConditional o, left, right, reft if @logic
     (right.=unparen!)ripName left.=unwrap!
+    # Optimize `a = while ...`.
+    if roop = not o.level and right instanceof While and not right.else
+      [lsub, left] = Chain left .cacheReference o
     code = name = (left <<< {+front})compile o, LEVEL_LIST
     if lvar
       if op is \=
@@ -1105,14 +1104,8 @@ class exports.Assign extends Node
       else if o.scope.checkReadOnly name
         left.carp "assignment to #that \"#name\""
     code += " #{ op - \: } "
-    code = if not o.level and right instanceof While and not right.else and
-              (lvar or left instanceof Chain and left.isSimpleAccess!)
-      # Optimize `a = while ...`.
-      """#{ res = o.scope.temporary \res } = [];
-         #{@tab}#{ right.makeReturn(res)compile o }
-         #{@tab}#code#res"""
-    else
-      code + right.compile o, LEVEL_LIST
+    return @compileRightLoop o, lsub, right, code if roop
+    code += right.compile o, LEVEL_LIST
     code = "(#code)" if o.level > LEVEL_LIST
     code
 
@@ -1205,6 +1198,15 @@ class exports.Assign extends Node
       val  = Chain rcache||=Var(rite), [Index key.maybeKey!]
       val  = Import Obj!, val if splat
       (^@<<<{left: node, right: val, +void})compile o, LEVEL_PAREN
+
+  compileRightLoop: (o, lsub, right, code) ->
+    pre = ''
+    if lsub instanceof Chain
+      for [lsub.head, lsub.tails.0.key]
+        pre += &compile(o) + ', ' if &isComplex!
+    """#pre#{ res = o.scope.temporary \res } = [];
+       #{@tab}#{ right.makeReturn res .compile o }
+       #{@tab}#code#res"""
 
 #### Import
 # Copies properties from right to left.

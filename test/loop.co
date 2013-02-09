@@ -210,6 +210,14 @@ continue for, o.count!_ in [1 2]
 eq o.i, 4
 
 
+# No IIFE-wrapping for directly assigned loops.
+eq \hack let
+  a = for i to 3
+    return \hack
+    i
+  a
+
+
 ### Line folding before/after `for` prepositions
 for x
 in   {2}
