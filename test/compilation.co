@@ -185,3 +185,6 @@ eq '(function(){});' bare '''
   void;
   void
 '''
+
+# [livescript#279](https://github.com/gkz/LiveScript/issues/279)
+################################################################
