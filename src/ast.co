@@ -1624,10 +1624,7 @@ class exports.While extends Node
     ctx <<< {+\continue, +\break}
     return node if node.getJump ctx for node of @body.lines
 
-  addBody: (@body) ->
-    [top] = body.lines
-    body.lines.length = 0 if top?verb is \continue and not top.label
-    this
+  addBody: (@body) -> this
 
   makeReturn: ->
     if it
@@ -1660,6 +1657,7 @@ class exports.While extends Node
       ret = "\n#{tab}return #{ res or '[]' };"
       yet and @else.makeReturn!lines.0 ||= Return!
     yet and lines.unshift JS "#yet = false;"
+    lines[*-1] => --lines.length if &?verb is \continue and not &label
     code += "\n#that\n#tab" if @body.compile o, LEVEL_TOP
     code += \}
     code += " while (#{ @test.compile o<<<{tab} LEVEL_PAREN });" if @post

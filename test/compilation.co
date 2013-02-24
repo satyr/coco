@@ -70,7 +70,7 @@ while (0) {
     break;
   }
 }
-''' bare '({} = ({}; {}); break) while 0 while 0'
+''' bare '(({} = ({}; {}); break) while 0; continue) while 0'
 
 
 compileThrows 'invalid use of null' 1 'null.po'
