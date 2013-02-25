@@ -150,12 +150,12 @@ default
 # Attach the appropriate listeners to compile scripts incoming over **stdin**.
 !function compileStdin
   argv.1 = \stdin
-  stdin = process.openStdin!
+  process.openStdin!
     code = ''
     &on \data !->
-      if it.toString!charCodeAt! is 4 # ctrl-Z
-        stdin.resume!
+      if 4 of [it.toString!trim![*-1]charCodeAt!, it.toString!charCodeAt!] # ctrl-D
         compileScript '' code
+        process.exit!
       else
         code += it
     &on \end  !-> compileScript '' code
