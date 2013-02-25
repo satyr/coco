@@ -154,11 +154,11 @@ default
     code = ''
     &on \end  !-> compileScript '' code
     &on \data !->
-      # Detect __^D__ and __^Z__ for Windows.
-      if it.0 of [4 26]
-        &emit \end
-        &destroy!
       code += it
+      # Detect trailing __^D__ or __^Z__ for Windows.
+      if code.slice(-3) of <[ \4\r\n \x1a\r\n ]>
+        compileScript '' code.slice 0 -3
+        &destroy!
 
 # Watch a source Coco file using `setTimeout`, taking an `action` every
 # time the file is updated.
