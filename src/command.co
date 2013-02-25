@@ -152,7 +152,12 @@ default
   argv.1 = \stdin
   process.openStdin!
     code = ''
-    &on \data !-> code += it
+    &on \data !->
+      if 4 of [it.toString!trim![*-1]charCodeAt!, it.toString!charCodeAt!] # ctrl-D
+        compileScript '' code
+        process.exit!
+      else
+        code += it
     &on \end  !-> compileScript '' code
 
 # Watch a source Coco file using `setTimeout`, taking an `action` every
