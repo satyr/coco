@@ -112,7 +112,7 @@
 
   # Defines delegaters.
   delegate: !(names, fn) ->
-    for name of names then let
+    for let name of names
       @[name] = -> fn.call this, name, it
 
   # Default implementations of the common node properties and methods. Nodes
@@ -1381,7 +1381,7 @@ class exports.Fun extends Node
     if @statement or name and @labeled
       code += ' ' + scope.add name, \function, this
     @hushed or @ctor or @newed or body.makeReturn!
-    code += "(#{ @compileParams scope }){"
+    code += "(#{ @compileParams o, scope }){"
     code += "\n#that\n#tab" if body.compileWithDeclarations o
     code += \}
     return pscope.assign pscope.temporary(\fn), code if loop
@@ -1391,7 +1391,7 @@ class exports.Fun extends Node
       code += ' function ctor$(){} ctor$.prototype = prototype;'
     if @front and not @statement then "(#code)" else code
 
-  compileParams: (scope) ->
+  compileParams: (o, scope) ->
     {{length}:params, body} = this
     # Remove trailing placeholders.
     for p of params by -1
@@ -1418,6 +1418,8 @@ class exports.Fun extends Node
         vr.=first if df = vr.getDefault!
         if vr.isEmpty!
           vr = Var scope.temporary \arg
+        else if vr.value is \&
+          vr = Var o.ref = scope.reference!
         else if vr not instanceof Var
           v = Var delete (vr.it || vr)name || vr.varName! ||
                   scope.temporary \arg
@@ -1670,19 +1672,30 @@ class exports.For extends While
   ->
     import all it
     @item = null if @item instanceof Var and not @item.value
+    for @kind => @[&] = true
+    @carp '`for own` without `in`' if @own and not @in
 
   children: <[ item source from to step body ]>
 
   aSource: null
 
-  show: -> @index
+  show: -> @kind.concat @index .join ' '
+
+  addBody: (body) ->
+    if @let
+      @item = Literal \& if delete @ref
+      body = Block Call.let do
+        with [] => &push Assign Var(that), Literal \index if delete @index
+                   &push Assign     that , Literal \item  if delete @item
+        <>
+    import {body}
 
   compileNode: (o) ->
     o.loop = true
     if idx = @index
     then o.scope.declare idx, this
     else idx = o.scope.temporary \i
-    unless @object
+    unless @in
       [pvar, step] = (@step or Literal 1)compileLoopReference o, \step
     if @from
       [tvar, tail] = @to.compileLoopReference o, \to
@@ -1697,11 +1710,11 @@ class exports.For extends While
         else "#pvar < 0 ? #idx >#eq #tvar : #idx <#eq #tvar"
     else
       @ref and @item = Var o.scope.reference!
-      if @item or @object and @own
-        [svar, srcPart] = @source.compileLoopReference o, \ref, not @object
+      if @item or @own or @let
+        [svar, srcPart] = @source.compileLoopReference o, \ref, not @in
       else
         svar = srcPart = @source.compile o, LEVEL_PAREN
-      unless @object
+      unless @in
         if 0 > pvar and ~~pvar is +pvar  # negative int
           vars = "#idx = #srcPart.length - 1"
           cond = "#idx >= 0"
@@ -1711,9 +1724,9 @@ class exports.For extends While
           cond = "#idx < #lvar"
     @else and @yet = o.scope.temporary \yet
     head = 'for ('
-    head += "#idx in " if @object
+    head += "#idx in "       if @in
     head += "#that = true, " if @yet
-    if @object
+    if @in
       head += srcPart
     else
       step is pvar or vars += ', ' + step
@@ -1725,7 +1738,12 @@ class exports.For extends While
     @own and head += ") if (#{ o.scope.assign \own$ '{}.hasOwnProperty' }
                             .call(#svar, #idx)"
     head += ') {'
-    @infuseIIFE!
+    if @let
+      @body.traverseChildren !->
+        switch it.value case \index then it.value = idx
+                        case \item  then it.value = "#svar[#idx]"
+    else
+      @infuseIIFE!
     o.indent += TAB
     if @item and not @item.isEmpty!
       head += \\n + o.indent +

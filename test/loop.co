@@ -351,3 +351,18 @@ for [0]
   for [1] then ok 1 of [1]
   for [2] =>   ok 2 of [2]
   ok 3 not in []
+
+
+### `for`-`let`
+i = v = 42
+ok ok for let i to 0
+ok ok for let i, v in {2}
+ok ok for let v, i of [3]
+ok i is v is 42
+
+fs = for <[a b]>
+  for let n, i of [1 2]
+    return -> & + n * 3 + i
+    ...
+eq 'a30' fs.0!
+eq 'b61' fs.3!
