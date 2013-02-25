@@ -152,8 +152,13 @@ default
   argv.1 = \stdin
   process.openStdin!
     code = ''
-    &on \data !-> code += it
     &on \end  !-> compileScript '' code
+    &on \data !->
+      # Detect __^D__ and __^Z__ for Windows.
+      if it.0 of [4 26]
+        &emit \end
+        &destroy!
+      code += it
 
 # Watch a source Coco file using `setTimeout`, taking an `action` every
 # time the file is updated.
