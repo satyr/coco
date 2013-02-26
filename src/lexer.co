@@ -497,9 +497,13 @@ exports import
   unline: !->
     return unless @tokens.1
     switch @last.0
-    # Mark the last indent as dummy.
-    case \INDENT  then @dents[*-1] += ''; fallthrough
-    case \NEWLINE then @tokens.length--
+    case \INDENT
+      # Mark the last indent as dummy.
+      @dents[*-1] += ''
+    case \NEWLINE
+      return if @last.1 is \;
+    default return
+    @last = @tokens[--*-1]
 
   # (Re)tags function parameters.
   parameters: !(arrow) ->

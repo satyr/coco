@@ -44,9 +44,8 @@ func = (x) -> (x) -> (x) -> x
 eq func(1)(2)(3), 3
 
 
-# Trailing comma/semicolon in a function parameter.
+# Trailing comma in a function parameter.
 eq 1, ((f,) -> f()) (,) -> 1
-eq 2, ((f;) -> f()) (;) -> 2
 
 
 # Implicit calls in functions in parens.
