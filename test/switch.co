@@ -26,7 +26,7 @@ eq func(3), false
 eq func(8), void
 
 
-# One-liner
+### One-liner
 eq void, switch case 1 then break
 eq 1   , switch case 0 then break default 1
 eq 2   , switch case 1 then continue while 0; 2
@@ -49,7 +49,7 @@ ok switch \words
 , '`case` expands bare arrays'
 
 
-# Sans-topic
+### Sans-topic
 eq ok, switch
 case null                    then 0
 case !1                      then 1
@@ -62,6 +62,7 @@ case 'd' of (<[ e f ]>)      then 7
 default ok
 
 
+### Anaphoric
 eq '''
 var that;
 switch (false) {
@@ -95,9 +96,8 @@ case[] then
 default 9
 ''', {+bare}
 
-
-# `that`
-eq 1, switch 1 case 1 then that
+eq 1, switch 1 case 1 then that default
+eq 2, switch 2 case 0 then default that
 
 while 1
   eq 3, switch 3 case 3 then that
@@ -106,7 +106,7 @@ while 1
 switch case [0, 2, 4,] then eq 2, that
 
 
-# Sans-condition
+### Sans-condition
 switch
   ok 1 'caseless switch is allowed'
   break if true
