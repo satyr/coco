@@ -51,13 +51,50 @@ o = (patterns, action, options) ->
 # value for the _MATH_ terminal, and `$3` would be the value of the second
 # _Expression_.
 bnf =
-  # The types of things that can be accessed or called into.
+  # Things that can directly be accessed or called.
+  Head:
+    o \ID      -> L Var $1
+    o \STRNUM  -> L Literal $1
+    o \LITERAL ditto
+
+    o \Parenthetical
+    o \List
+
+    # The function literal can be either anonymous with `->`,
+    o 'PARAM( ArgList OptComma )PARAM -> Block' -> L Fun $2, $6, $5 is \~>
+    # or named with `function`.
+    o 'FUNCTION CALL( ArgList OptComma )CALL Block' -> L Fun($3, $6)named $1
+
+    o 'IF Expression Block Else' -> If $2, $3, $1 is \unless .addElse $4
+    o 'IF INDENT IfLines DEDENT' -> $3.maybeUnlessBlock $1 is \unless
+
+    o 'LoopHead Block Else' -> $1.addBody $2 .addElse $3
+
+    o 'SWITCH Expression Cases'               -> new Switch $2, $3
+    o 'SWITCH Expression Cases DEFAULT Block' -> new Switch $2, $3, $5
+    o 'SWITCH            Cases'               -> new Switch null $2
+    o 'SWITCH            Cases DEFAULT Block' -> new Switch null $2, $4
+    o 'SWITCH                          Block' -> new Switch null [], $2
+
+    o 'TRY Block'                           -> new Try $2
+    o 'TRY Block CATCH Block'               -> new Try $2, $3, $4
+    o 'TRY Block CATCH Block FINALLY Block' -> new Try $2, $3, $4, $6
+    o 'TRY Block             FINALLY Block' -> new Try $2, null null $4
+
+    o 'CLASS Chain OptExtends OptImplements Block'
+    , -> new Class $2.unwrap!, $3, $4, $5
+    o 'CLASS       OptExtends OptImplements Block'
+    , -> new Class null      , $2, $3, $4
+
+    o 'LET CALL( ArgList OptComma )CALL Block' -> Call.let $3, $6
+
+    o 'WITH Expression Block' ->
+      Pipe $2, $3, \with
+    o 'FOR  Expression Block' ->
+      new For(kind: $1, source: $2, ref: true)addBody $3
+
   Chain:
-    o \ID            -> Chain L Var $1
-    o \Parenthetical -> Chain $1
-    o \List          ditto
-    o \STRNUM        -> Chain L Literal $1
-    o \LITERAL       ditto
+    o \Head -> Chain $1
 
     o 'Chain DOT Key'  -> $1.add Index $3, $2, true
     o 'Chain DOT List' ditto
@@ -65,13 +102,6 @@ bnf =
     o 'Chain CALL( ArgList OptComma )CALL' -> $1.add Call $3
 
     o 'Chain ?' -> Chain Existence $1.unwrap!
-
-    o 'LET CALL( ArgList OptComma )CALL Block' -> Chain Call.let $3, $6
-
-    o 'WITH Expression Block' ->
-      Chain Pipe $2, $3, \with
-    o 'FOR  Expression Block' ->
-      Chain new For(kind: $1, source: $2, ref: true)addBody $3
 
   # An array or object
   List:
@@ -177,23 +207,9 @@ bnf =
 
     o 'Chain !?' -> Existence $1.unwrap!, true
 
-    # The function literal can be either anonymous with `->`,
-    o 'PARAM( ArgList OptComma )PARAM -> Block' -> L Fun $2, $6, $5 is \~>
-    # or named with `function`.
-    o 'FUNCTION CALL( ArgList OptComma )CALL Block' -> L Fun($3, $6)named $1
-
-    # The full complement of `if` and `unless` expressions
-    o 'IF Expression Block Else'      -> If $2, $3, $1 is \unless .addElse $4
-    o 'IF INDENT IfLines DEDENT'      -> $3.maybeUnlessBlock $1 is \unless
-    # and their postfix forms.
     o 'Expression POST_IF Expression' -> If $3, $1, $2 is \unless
 
-    # Loops can either be normal with a block of expressions to execute
-    # and an optional `else` clause,
-    o 'LoopHead Block Else' -> $1.addBody $2 .addElse $3
-    # postfix with a single expression,
     o 'Expression LoopHead' -> $2.addBody Block $1
-    # or postconditional.
     o 'DO Block WHILE Expression'
     , -> new While($4, $3 is \until, true)addBody $2
 
@@ -205,22 +221,6 @@ bnf =
     # `break` or `continue`.
     o \JUMP     -> L new Jump $1
     o 'JUMP ID' -> L new Jump $1, $2
-
-    o 'SWITCH Expression Cases'               -> new Switch $2, $3
-    o 'SWITCH Expression Cases DEFAULT Block' -> new Switch $2, $3, $5
-    o 'SWITCH            Cases'               -> new Switch null $2
-    o 'SWITCH            Cases DEFAULT Block' -> new Switch null $2, $4
-    o 'SWITCH                          Block' -> new Switch null [], $2
-
-    o 'TRY Block'                           -> new Try $2
-    o 'TRY Block CATCH Block'               -> new Try $2, $3, $4
-    o 'TRY Block CATCH Block FINALLY Block' -> new Try $2, $3, $4, $6
-    o 'TRY Block             FINALLY Block' -> new Try $2, null null $4
-
-    o 'CLASS Chain OptExtends OptImplements Block'
-    , -> new Class $2.unwrap!, $3, $4, $5
-    o 'CLASS       OptExtends OptImplements Block'
-    , -> new Class null      , $2, $3, $4
 
     o 'Chain EXTENDS Expression' -> Util.Extends $1.unwrap!, $3
 
@@ -343,11 +343,11 @@ operators =
 # Process all of our rules and prepend resolutions, while recording all
 # terminals (every symbol which does not appear as the name of a rule above)
 # as `tokens`.
-tokens = do
+tokens =
   for name, alts in bnf
     for alt of alts
       token if token not in bnf for token of alt.0
-.join ' '
+  .join ' '
 
 bnf.Root = [[[\Body] 'return $$']]
 

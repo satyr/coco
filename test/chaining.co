@@ -61,7 +61,55 @@ eq 0,
   ?.0
 
 
-# Bracketless Accesses
+# Dots have to workaround syntax error when accessing a simple number.
+eq '0 .go;'  , Coco.compile '0.go', {+bare}
+# Brackets don't.
+eq "0['do'];", Coco.compile '0.do', {+bare}
+
+
+### Block Construction Accessibility
+eq 0,
+  ->
+    0
+  .call!
+
+eq 0,
+  class
+    {0}
+  .::0
+
+eq 2,
+  if 0
+    1
+  else
+    2
+  .valueOf!
+
+eq \3,
+  switch
+  case 0 => 1
+  case 2 => 3
+  default
+  .toString!
+
+eq '2,3,3,4',
+  for x of [0 1]
+    x + 2
+  else
+    ...
+  .concat 3 4 .join!
+
+eq \foobar,
+  try
+    throw \foo
+  catch foo
+    foo
+  finally
+    1
+  .concat \bar
+
+
+### Bracketless Accesses
 a = [0]
 eq 0, a.0
 eq 0, a."0"
@@ -75,14 +123,8 @@ eq 1, [-> it]. 0  1
 eq 1, [-> it].'0' 1
 
 
-# `prototype`/`constructor` shorhands
-eq Array::toString, Array.prototype.toString
-eq 12345..toString, 123.constructor.toString
-eq 0 (:::0)::
-eq 0 (..:0)..
 
-
-# Length Star
+### Length Star
 a = [[1], 2, 3]
 eq 3, a[*-1]
 eq 1, a[0][*-*]
@@ -92,7 +134,7 @@ eq 2, a.length
 compileThrows 'stray *' 1 '[*-1]'
 
 
-# Binding Access
+### Binding Access
 parent =
   child:
     method: -> @member
@@ -105,13 +147,7 @@ eq 42, parent.child.~{method}.method!
 compileThrows 'invalid assign' 1 'o~m=g'
 
 
-# Dots have to workaround syntax error when accessing a simple number.
-eq '0 .go;'  , Coco.compile '0.go', {+bare}
-# Brackets don't.
-eq "0['do'];", Coco.compile '0.do', {+bare}
-
-
-# Array/Object Slice
+### Array/Object Slice
 eq '2,3', '' + [3,2][1,0]
 eq '2,3', '' + [0,1,2,3][*-2,*-1]
 eq '2,3', '' + {2,3}<[2 3]>
@@ -136,7 +172,7 @@ compileThrows 'empty slice' 1 'o[,,]'
 if 0 then @front{ne,ss}
 
 
-# Automatic Dot Insertion
+### Automatic Dot Insertion
 eq @toString, @\toString
 eq @toString, @"to#{\S}tring"
 
@@ -156,7 +192,7 @@ eq \z   x?=y.z
 eq \z   x
 
 
-# Semiautovivification
+### Semiautovivification
 o = {}
 o.@a.@@b .push 0 1
 o.a@c@@d .push 2 3
@@ -166,7 +202,7 @@ eq '2,3' ''+o.a.c.d
 eq 5 o.a.b.e.f.4
 
 
-# Bang Call
+### Bang Call
 eq '' String!
 (-> ok true)!
 

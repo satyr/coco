@@ -361,6 +361,13 @@ eq a * b, 21
 eq 11, ((, a) -> a)(, 11)
 
 
+### `prototype`/`constructor` shorhands
+eq Array::toString, Array.prototype.toString
+eq 12345..toString, 123.constructor.toString
+eq 0 (:::0)::
+eq 0 (..:0)..
+
+
 ### JS Literal
 ok `delete ! delete {}`
 
