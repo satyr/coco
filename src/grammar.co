@@ -32,7 +32,8 @@ o = (patterns, action, options) ->
   patterns.=trim!split /\s+/
   action &&= if action is ditto then last else
     "#action"
-    .replace /^function\s*\(\)\s*\{\s*return\s*([\s\S]*);\s*\}/ '$$$$ = $1;'
+    .replace /^function\s*\(\)\s*\{\s*([\s\S]*\S)\s*\}/ '$1'
+    .replace /\breturn\b/ '$$$$ ='
     .replace /\b(?!Er)[A-Z][\w.]*/g \yy.$&
     .replace /\.L\(/g '$&yylineno, '
   [patterns, last := action or '', options]
@@ -125,9 +126,9 @@ bnf =
   ArgList:
     o ''                                                -> []
     o \Arg                                              -> [$1]
-    o 'ArgList , Arg'                                   -> $1.concat $3
-    o 'ArgList OptComma NEWLINE Arg'                    -> $1.concat $4
-    o 'ArgList OptComma INDENT ArgList OptComma DEDENT' ditto
+    o 'ArgList , Arg'                                   -> $1.push $3; $1
+    o 'ArgList OptComma NEWLINE Arg'                    -> $1.push $4; $1
+    o 'ArgList OptComma INDENT ArgList OptComma DEDENT' -> $1.concat $4
   Arg:
     o     \Expression
     o '... Expression' -> Splat $2
@@ -232,7 +233,7 @@ bnf =
 
   Exprs:
     o         \Expression  -> [$1]
-    o 'Exprs , Expression' -> $1.concat $3
+    o 'Exprs , Expression' -> $1.push $3; $1
 
   # The various forms of property.
   KeyValue:
@@ -260,8 +261,8 @@ bnf =
   Properties:
     o ''                                     -> []
     o \Property                              -> [$1]
-    o 'Properties , Property'                -> $1.concat $3
-    o 'Properties OptComma NEWLINE Property' -> $1.concat $4
+    o 'Properties , Property'                -> $1.push $3; $1
+    o 'Properties OptComma NEWLINE Property' -> $1.push $4; $1
     o 'INDENT Properties OptComma DEDENT'    -> $2
 
   Parenthetical:
@@ -307,7 +308,7 @@ bnf =
 
   Cases:
     o       'CASE Exprs Block' -> [new Case $2, $3]
-    o 'Cases CASE Exprs Block' -> $1.concat new Case $3, $4
+    o 'Cases CASE Exprs Block' -> $1.push new Case $3, $4; $1
 
   OptExtends:
     o 'EXTENDS Expression' -> $2
