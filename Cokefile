@@ -25,11 +25,7 @@ slobber = (path, code) ->
   say '* ' + path
 
 minify = ->
-  {parser, uglify} = require \uglify-js
-  ast = parser.parse it
-  ast = uglify.ast_mangle  ast
-  ast = uglify.ast_squeeze ast
-  uglify.gen_code ast
+  require \uglify-js .minify it, {+fromString} .code
 
 
 task \install 'install Coco via npm' -> shell 'npm install -g .'
@@ -86,8 +82,7 @@ task \build:browser 'build extras/' ->
     // Copyright 2012, Jeremy Ashkenas + Satoshi Murakami
     // Released under the MIT License
     http://satyr.github.com/coco
-    #{ minify js };
-
+    #{ minify js }
   """
   invoke \test:browser
 

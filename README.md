@@ -36,6 +36,24 @@ Get [Node.js](http://nodejs.org) and [npm](http://npmjs.org), then:
 - `git clone git://github.com/satyr/coco.git && cd coco && bin/coke i`
 
 ## Changelog
+### 0.9.1
+- Added `if`-block. ([#151](https://github.com/satyr/coco/issues/151))
+- Added `for`-`let`. ([#164](https://github.com/satyr/coco/issues/164))
+- Added `<>` aka _lef_. ([#180](https://github.com/satyr/coco/issues/180))
+- Gave `|>` the lowest precedence.
+- Made block constructions directly dot-accessible.
+- Made JS literal Markdown-esque. To include N `` ` ``, close with N+1 `` ` ``:
+  ```` ``` '``' ``` ````
+- Quit reusing temporary variables.
+- File extensions like _co.json_, _coon_, or _cocoon_ now imply `--json`.
+- Fixed:
+  - [#193](https://github.com/satyr/coco/issues/193)
+  - [#195](https://github.com/satyr/coco/issues/195)
+  - [#199](https://github.com/satyr/coco/issues/199)
+  - [#200](https://github.com/satyr/coco/issues/200)
+  - [gkz/LiveScript#273](https://github.com/gkz/LiveScript/issues/273)
+  - [gkz/LiveScript#279](https://github.com/gkz/LiveScript/issues/279)
+
 ### 0.9.0
 - Literal `&` is now used to reference several new targets:
   - Left hand of `|>` (in place of `_`).
