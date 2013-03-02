@@ -71,17 +71,19 @@ eq '036', (i for i from 0 til 9 by 3).join ''
 eq '0,-1,-2' ''+for i til -3 then i
 
 
-# all/from/to/by aren't reserved off-context.
-all = from = to = by = 1
+# Never mess with binary `in`/`of` and variable `by`/`ever`/`from`/`til`/`to`.
+by = ever = from = til = to = 1
 
-# Never mess with binary `in`/`of` and variable `by`.
+ever for to to to if by for til til til while not by
+
+break for ever from in til of to
+
 for i to 0
   ok 0 in [0]
   ok 0 of [0]
-  ok by = true
+  ok by
 
 by for by of [1]; ok by
-by for by til 1
 ok by
 
 
@@ -346,7 +348,8 @@ eq \2718,
   .join ''
 
 # [#195](https://github.com/satyr/coco/issues/195)
-for [0]
+# [#200](https://github.com/satyr/coco/issues/200)
+for [{} in {} of [[] []]]
   ok 0 in {0}
   for [1] then ok 1 of [1]
   for [2] =>   ok 2 of [2]

@@ -52,6 +52,8 @@ exports import
     @closes = []
     # The stack for tagging parameters.
     @parens = []
+    # The stack of flags per nesting level.
+    @flags = []
     # Call tokenizers based on the character at current `i`ndex.
     # Each tokenizing method is responsible for
     # returning the number of characters it has consumed.
@@ -105,14 +107,19 @@ exports import
     case \return \throw                                then tag = \HURL
     case \break  \continue                             then tag = \JUMP
     case \this \eval \super then return @token(\LITERAL id, true)length
-    case \for  then @seenFor = true; @wantBy = false; id = []
-    case \then then @seenFor = @wantBy = false
+    case \for
+      id = []
+      @fset \for true
+      @fset \to false
+    case \then
+      @fset \for false
+      @fset \to false
     case \catch \function then id = ''
     case \in \of
-      if @seenFor
-        @seenFor = false
+      if @fget \for
+        @fset \for false
         if id is \of
-          @wantBy = true
+          @fset \by true
           # OF holds the index variable.
           id = ''
           if last.0 is \ID and @tokens[*-2]0 of <[ , ] } ]>
@@ -161,21 +168,28 @@ exports import
       case \from then @forange! and tag = \FROM
       case \to \til
         @forange! and @tokens.push [\FROM '' @line] [\STRNUM \0 @line]
-        if @seenFrom
-          import {-seenFrom, +wantBy}
+        if @fget \from
+          @fset \from false
+          @fset \by   true
           tag = \TO
         else if last.0 is \STRNUM and not last.callable
           last <<< 0:\RANGE op:id
           return id.length
       case \by
         if last.0 is \STRNUM and @tokens[*-2]0 is \RANGE
-        then tag = \RANGE_BY
-        else @wantBy &&= !tag = \BY
+          tag = \RANGE_BY
+        else if @fget \by
+          tag = \BY
+          @fset \by false
       case \ever then if last.0 is \FOR
-        @seenFor = false; last.0 = \WHILE; tag = \LITERAL; id = \true
+        @fset \for false
+        last.0 = \WHILE; tag = \LITERAL; id = \true
     tag ||= match.1.toUpperCase!
     @unline! if tag of <[ RELATION THEN ELSE CASE DEFAULT CATCH FINALLY
                           IN OF FROM TO BY EXTENDS IMPLEMENTS ]>
+    if tag of <[ THEN IF WHILE ]>
+      @fset \for false
+      @fset \by  false
     @token tag, id
     input.length
 
@@ -335,7 +349,8 @@ exports import
                    IN OF TO BY FROM EXTENDS IMPLEMENTS ]>
         return length
       if delta then @indent delta else @newline!
-    @seenFor = @wantBy = false
+    @fset \for false
+    @fset \by  false
     length
 
   # Consumes non-newline whitespaces and/or a line comment.
@@ -358,7 +373,9 @@ exports import
     case \/ \% \**    then tag = \MATH
     case \++ \--      then tag = \CREMENT
     case \<<< \<<<<   then tag = \IMPORT
-    case \;           then tag = \NEWLINE; @wantBy = false
+    case \;
+      @fset \by false
+      tag = \NEWLINE
     case \.
       @last.0 = \? if @last.1 is \?
       tag = \DOT
@@ -448,7 +465,7 @@ exports import
     case \..     then @adi!; tag = \ID; val = up || \constructor
     case \=>
       @unline!
-      @seenFor = false
+      @fset \for false
       return 1 + that if @doInlinedent code, index+2
       tag = \THEN
     default if \< is val.charAt 0
@@ -641,13 +658,22 @@ exports import
   # Checks FOR for FROM/TO.
   forange: ->
     if @tokens[* - 2 - (@last.0 of <[NEWLINE INDENT]>)]?0 is \FOR
-      import {-seenFor, +seenFrom}
+      @fset \for  false
+      @fset \from true
+      return true
+    false
 
   # Complains on bad regex flag.
   validate: (flag) ->
     if flag and /(.).*\1/exec flag
       @carp "duplicate regex flag `#{that.1}`"
     flag
+
+  # {G,S}ets a per-nest flag.
+  fget: (key) ->
+    @flags[@closes.length]?[key]
+  fset: (key, val) ->
+    @flags@[@closes.length][key] = val
 
   # Throws a syntax error with the current line number.
   carp: !-> carp it, @line
