@@ -1456,7 +1456,7 @@ class exports.Class extends Node
         for {key}:prop of node.items
           continue unless prop.val instanceof Fun or prop.accessor
           if key.isComplex!
-            key = Var o.scope.temporary \key
+            key = Var o.scope.temporary \method
             prop.key = Assign key, prop.key
           for []concat prop.val
             &meth = key
@@ -2123,7 +2123,7 @@ Scope::<<<
   # If we need to store an intermediate result, find an available name for a
   # compiler-generated variable. `var$`, `var1$`, and so on.
   temporary: (name || \ref) ->
-    while @variables"#name\$."
+    while @checkTemporary name
       name = if name.length < 2 and name < \z
         then String.fromCharCode name.charCodeAt! + 1
         else name.replace /\d*$/ -> ++it
@@ -2139,6 +2139,12 @@ Scope::<<<
   check: (name, above) ->
     return type if (type = @variables"#name.") or not above
     @parent?check name, above
+
+  # Checks to see if a temporary variable has already been declared
+  # in the nearest non-wrapper scope.
+  checkTemporary: (name) ->
+    return type if (type = @variables"#name\$.") or not @shared
+    @parent?checkTemporary name
 
   # Checks if a variable can be reassigned.
   checkReadOnly: (name) ->

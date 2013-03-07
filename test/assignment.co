@@ -369,5 +369,10 @@ o = p: q: \r
 o.p[String \q].=replace /^|$/g "<#<>>"
 eq o.p.q, '<r>r<r>'
 
+let
+  eq o.p, o[String \p] = try
+    o[String \q] = <>
+    <>
+
 for ['<>' '[a] = <>' 'f = -> <>' '[<>] * 2']
   compileThrows 'stray <>' 1 &
