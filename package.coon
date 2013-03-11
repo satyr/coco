@@ -1,5 +1,5 @@
 name    : \coco
-version : \0.9.1
+version : require \./lib/coco .VERSION
 
 description : 'Unfancy CoffeeScript'
 keywords    :
