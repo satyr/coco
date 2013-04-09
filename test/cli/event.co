@@ -1,0 +1,17 @@
+{ok, strictEqual: eq} = require \assert
+
+done = []
+
+watch = (event, prop) ->
+  Coco.on event, ->
+    eq it.input, \ok
+    ok it.options.bare
+    console.log it{(prop)}
+    done.push event
+
+watch \lex     \options
+watch \parse   \tokens
+watch \compile \ast
+watch \write   \output
+
+process.on \exit -> eq 'lex,parse,compile,write' done.join!

@@ -11,8 +11,9 @@ tint = (text, color ? green) -> color + text + reset
 # Run our node/coco interpreter.
 run = (args) ->
   proc = spawn \node [\lib/command]concat args
-  proc.stderr.on \data say
-  proc       .on \exit -> process.exit it if it
+  proc.stdout.pipe process.stdout
+  proc.stderr.pipe process.stderr
+  proc.on \exit -> process.exit it if it
 
 shell = (command) ->
   err, sout, serr <- exec command
@@ -126,11 +127,16 @@ task \test:json 'test JSON {de,}serialization' ->
   exec 'diff -u lib/ast.js -' (e, out) -> say e || out.trim! || tint \ok
   .stdin.end code
 
+task \test:event 'test compiler events' ->
+  run <[ -bcr ./test/cli/event.co -e ok ]>
+
 function runTests global.Coco
   startTime = Date.now!
   passedTests = failedTests = 0
-  for name, func in require \assert then let
-    global[name] = -> func ...; ++passedTests
+  for let name, func in require \assert
+    global[name] = !->
+      func ...
+      ++passedTests
   global <<<
     eq: strictEqual
     throws: !(msg, fun) ->
