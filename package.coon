@@ -8,8 +8,8 @@ keywords    :
   \coffeescript
   \javascript
 
-author   : 'satyr <murky.satyr@gmail.com> (http://satyr.github.com)'
-homepage : \http://satyr.github.com/coco/
+author   : 'satyr <murky.satyr@gmail.com> (http://satyr.github.io)'
+homepage : \http://satyr.github.io/coco/
 bugs     : \https://github.com/satyr/coco/issues
 licenses :
   type: \MIT, url: \https://raw.github.com/satyr/coco/master/LICENSE

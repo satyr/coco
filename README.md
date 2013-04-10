@@ -27,7 +27,7 @@ Coco tries to amend them, entwining good parts of both.
 ## Documents
 - [Additions](https://github.com/satyr/coco/wiki/additions)
 - [Glossary](https://github.com/satyr/coco/wiki/glossary)
-- [Annotated Source](http://satyr.github.com/coco/src/)
+- [Annotated Source](http://satyr.github.io/coco/src/)
 
 ## Installation
 Get [Node.js](http://nodejs.org) and [npm](http://npmjs.org), then:
@@ -401,7 +401,7 @@ Get [Node.js](http://nodejs.org) and [npm](http://npmjs.org), then:
 - `...` is now prefix.
 - `{0: first, (*-1): last} = array` now works.
 - Added `--lex` to the `coco` utility. Removed `--lint`.
-- _src/_ now has [doc view](http://satyr.github.com/coco/src/).
+- _src/_ now has [doc view](http://satyr.github.io/coco/src/).
 
 ### 0.1.1
 Release.
