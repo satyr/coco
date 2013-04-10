@@ -394,6 +394,8 @@ eq o.1, \1
 eq o.3, 3
 eq o.5, 5
 
+compileThrows 'unexpected `,` (implicit)' 1 '0 1'
+
 
 ### Numeric/Character Ranges
 show = -> @@ * ' '

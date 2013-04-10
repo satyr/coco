@@ -35,6 +35,12 @@ exports import
     it.shift! if it.0?0 is \NEWLINE
     it
 
+  # Pretty-prints a token for errors.
+  pp: ([tag, val]:token) ->
+    return "`#tag` (implicit)" unless val
+    return tag if /^\s+/test val
+    "`#val`"
+
   #### Main Loop
 
   tokenize: (code, o) ->
@@ -947,7 +953,7 @@ character = if JSON!? then uxxxx else ->
       ts  = []
       enc = if char then character else String
       add = !->
-         if 0x10000 < ts.push [\STRNUM enc n; lno] [\, \, lno]
+         if 0x10000 < ts.push [\STRNUM enc n; lno] [\, '' lno]
            carp 'range limit exceeded' lno
       if token.op is \to
       then add! for n from from to  to by by
@@ -956,10 +962,10 @@ character = if JSON!? then uxxxx else ->
       tokens.splice i, 2 + 2 * byp, ...ts
       i += ts.length - 1
     case \WORDS
-      ts = [[\[ \[ lno = token.2]]
+      ts = [[\[ \<[ lno = token.2]]
       for word of token.1.slice 2 -2 .match /\S+/g or ''
-        ts.push [\STRNUM; string \', word, lno; lno] [\, \, lno]
-      tokens.splice i, 1, ...ts, [\] \] lno]
+        ts.push [\STRNUM; string \', word, lno; lno] [\, '' lno]
+      tokens.splice i, 1, ...ts, [\] \]> lno]
       i += ts.length
     case \INDENT
       if tokens[i-1]
@@ -976,7 +982,7 @@ character = if JSON!? then uxxxx else ->
     case \CREMENT  then continue unless able tokens, i
     default continue
     if token.spaced and tokens[i+1]0 of ARG
-      tokens.splice ++i, 0 [\, \, token.2]
+      tokens.splice ++i, 0 [\, '' token.2]
 
 # Seeks `tokens` from `i`ndex and `go` for a token of the same level
 # that's `ok` or an unmatched closer.

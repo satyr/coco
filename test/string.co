@@ -203,7 +203,7 @@ eq 'multiline nested "interpolations" work', """multiline #{
 
 compileThrows 'unterminated interpolation' 2 '"#{\n'
 
-throws "Parse error on line 1: Unexpected ')'" -> Coco.compile '"(#{+})"'
+compileThrows "unexpected `)`" 1 '"(#{+})"'
 
 compileThrows 'invalid variable interpolation "if"' 1 '"#if"'
 

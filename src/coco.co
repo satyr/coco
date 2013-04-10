@@ -8,11 +8,16 @@ lexer = require \./lexer
 # the generic stream of tokens our lexer produces.
 {parser} = require \./parser
 parser import
-  yy    : require \./ast
-  lexer :
+  yy: require \./ast
+
+  lexer:
     lex           : -> [tag, @yytext, @yylineno] = @tokens[++@pos] or ['']; tag
     setInput      : -> @pos = -1; @tokens = it
     upcomingInput : -> ''
+
+  parseError: ->
+    token = @lexer.tokens[@lexer.pos]
+    throw SyntaxError "unexpected #{lexer.pp token} on line #{token.2 + 1}"
 
 exports import
   VERSION: \0.9.2b
