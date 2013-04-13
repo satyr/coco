@@ -262,6 +262,7 @@ class exports.Block extends Node
     o = {level: LEVEL_TOP, scope: @scope = Scope.root = new Scope, ...options}
     delete o.filename
     o.indent = if bare = delete o.bare then '' else TAB
+    for o.globals or [] => @scope.add &, \arg
     if /^\s*(?:[/#]|javascript:)/test @lines.0?code
       prefix = @lines.shift!code + \\n
     if delete o.eval and @chomp!lines.length

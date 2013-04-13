@@ -16,6 +16,9 @@ eq '''
 ''' Coco.compile 'delete o.k' {+eval, +bare}
 
 
+eq 'v = w = x;' Coco.compile 'v = w := x' {globals: <[v w]>, +bare}
+
+
 compileThrows 'missing `"`' 2 '\n"\n'
 
 compileThrows 'unterminated JS literal' 3 '\n\n```\n'

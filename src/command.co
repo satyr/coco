@@ -247,7 +247,9 @@ default
       if o.compile
         say Coco.compile code, {o.bare}
       else
-        _  = vm.runInThisContext Coco.compile(code, {\eval o.bare}), \repl
+        _  = vm.runInThisContext do
+          Coco.compile code, {o.bare, +eval, globals: Object.keys global}
+          \repl
         _ !? global <<< {_}
         pp  _
         say _ if typeof _ is \function
