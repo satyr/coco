@@ -57,7 +57,7 @@ eq '\\\\#{}\\\\\\\"', //
  \\ \"
 //.source
 
-eq '(?:)' ////source
+eq '(?:)' // //source
 
 eq // _ #{if 1 then \g else \m}//? + '', '/_/g'
 
@@ -90,3 +90,11 @@ eq \string typeof //^#{''}$//$
 eq      /\\\//$      /\\\//source
 eq    //\\\///$    //\\\///source
 eq //#{\\}\///$ //#{\\}\///source
+
+
+### Triple-or-more-slash as delimeter
+ok ///
+  ^ https?:// \w+ \. \w+
+///test 'https://github.com'
+
+ok /////(?:////){7}/////test \/ * 42

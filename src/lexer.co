@@ -293,8 +293,9 @@ exports import
   # Matches a multiline, extended regex literal.
   doHeregex: (code, index) ->
     {tokens, last} = this
-    parts = @interpolate code, index, \//
-    rest  = code.slice index + 2 + parts.size
+    delim = (/\/*/g <<< lastIndex: index)exec(code)0
+    parts = @interpolate code, index, delim
+    rest  = code.slice index + delim.length + parts.size
     flag  = @validate /^(?:[gimy]{1,4}|[?$]?)/exec(rest)0
     if parts.1
       if flag is \$
@@ -319,7 +320,7 @@ exports import
         if dynaflag then tokens.push ...dynaflag else @token \STRNUM "'#flag'"
       @token (if flag is \$ then \) else \)CALL), ''
     else @regex reslash(parts.0.1.replace HEREGEX_OMIT, ''), flag
-    2 + parts.size + flag.length
+    delim.length + parts.size + flag.length
 
   # Matches a word literal, or ignores a sequence of whitespaces.
   doBackslash: (code, BSTOKEN.lastIndex) ->
