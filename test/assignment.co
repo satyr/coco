@@ -224,6 +224,10 @@ eq 0 z
 coffee1188 = coffee1188 := ok ok
 
 
+# [#220](https://github.com/satyr/coco/issues/220)
+compileThrows 'assignment to undeclared "p"' 1 '{p} := q'
+
+
 ### Accessign
 parent = child: str: 'test'
 
