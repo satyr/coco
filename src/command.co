@@ -67,6 +67,7 @@ default
     compileScripts!
   case require \tty .isatty 0
     say version! + \\n + help! + \\n
+    o.bare = true
     repl!
   default
     compileStdin!
