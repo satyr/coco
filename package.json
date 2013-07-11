@@ -1,6 +1,6 @@
 {
   "name": "coco",
-  "version": "0.9.2b",
+  "version": "0.9.2-b",
   "description": "Unfancy CoffeeScript",
   "keywords": [
     "language",
@@ -8,8 +8,8 @@
     "coffeescript",
     "javascript"
   ],
-  "author": "satyr <murky.satyr@gmail.com> (http://satyr.github.com)",
-  "homepage": "http://satyr.github.com/coco/",
+  "author": "satyr <murky.satyr@gmail.com> (http://satyr.github.io)",
+  "homepage": "http://satyr.github.io/coco/",
   "bugs": "https://github.com/satyr/coco/issues",
   "licenses": [
     {

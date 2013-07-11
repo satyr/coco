@@ -20,7 +20,7 @@ parser import
     throw SyntaxError "unexpected #{lexer.pp token} on line #{token.2 + 1}"
 
 exports import
-  VERSION: \0.9.2b
+  VERSION: \0.9.2-b
 
   # Compiles a string of Coco code to JavaScript.
   compile: (code, options) ->
