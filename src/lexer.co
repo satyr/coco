@@ -343,8 +343,7 @@ exports import
     {length} = @countLines input
     {last} = this; last <<< {+eol, +spaced}
     return length if index + length >= code.length
-    if tabs and (@emender ||= //[^#{ tabs.charAt! }]//)exec tabs
-      @carp "contaminated indent #{ escape that }"
+    @dentlint tabs
     if 0 > delta = tabs.length - @dent
       @dedent -delta
       @newline!
@@ -484,10 +483,11 @@ exports import
     sym.length
 
   doInlinedent: (code, index, list) ->
-    return 0 unless d = (INLINEDENT <<< lastIndex: index)exec code .0.length
+    return 0 unless d = (INLINEDENT <<< lastIndex: index)exec code .0
+    @dentlint d.slice 0 -1
     list and @tokens.push [\LITERAL \void @line] [\ASSIGN \= @line]
-    @indent index + d - @dent - 2 - code.lastIndexOf \\n index
-    d
+    @indent index + d.length - @dent - 2 - code.lastIndexOf \\n index
+    d.length
 
   #### Token Manipulators
 
@@ -675,6 +675,11 @@ exports import
     if flag and /(.).*\1/exec flag
       @carp "duplicate regex flag `#{that.1}`"
     flag
+
+  # Complains on indentation contamination.
+  dentlint: !(dent) ->
+    if dent and (@emender ||= //[^#{ dent.charAt 0 }]//)exec dent
+      @carp "contaminated indent #{ escape that }"
 
   # {G,S}ets a per-nest flag.
   fget: (key) ->
@@ -1067,7 +1072,7 @@ REGEX = //
 HEREGEX_OMIT = /\s+(?:#.*)?/g
 
 LASTDENT   = /\n[^\n\S]*$/
-INLINEDENT = /[^\n\S]*[^#\s]?/g
+INLINEDENT = /[^\n\S]*[^#\s]|/g
 
 NONASCII = /[\x80-\uFFFF]/
 

@@ -446,9 +446,13 @@ eq '10,5,16,8,4,2,1' ''+ while n > 1 => if n & 1 => n = 3*n + 1
                                         else     => n /= 2
 
 ok -> =>
-   -> =>
+   -> => ##
       => ->
          => ->
+
+# [#230](https://github.com/satyr/coco/issues/230):
+# Allow trailing spaces after `=>`.
+Coco.compile 'try =>  \n  this'
 
 
 ### Unary spread

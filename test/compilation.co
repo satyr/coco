@@ -27,6 +27,11 @@ compileThrows 'unterminated words'      3 '\n\n<[\n'
 
 compileThrows 'contaminated indent %20'    2 '1\n\t 2'
 compileThrows 'contaminated indent %09'    3 ' 1\n  2\n\t3'
+compileThrows 'contaminated indent %u3000' 2 '''
+try =>  1
+try =>　2
+'''
+
 compileThrows 'unmatched dedent (1 for 2)' 3 '1\n  2\n 3'
 
 compileThrows 'unmatched `)`' 2 '()\n)'
@@ -190,4 +195,4 @@ eq '(function(){});' bare '''
 '''
 
 # [livescript#279](https://github.com/gkz/LiveScript/issues/279)
-################################################################
+Coco.compile \################################################################
