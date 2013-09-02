@@ -271,7 +271,10 @@ default
   require(\child_process)spawn do
     process.execPath
     o.nodejs.join(' ')trim!split(/\s+/)concat args
-    cwd: process.cwd!, env: process.env, customFds: [0 to 2]
+    cwd: process.cwd!
+    env: process.env
+    stdio: \inherit
+  .on \exit process~exit
 
 function help then """
   Usage: coco [options] [files] [arguments]
