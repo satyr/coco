@@ -310,7 +310,7 @@ exports import
         if t.0 is \TOKENS
           tokens.push ...t.1
         else
-          val = t.1.replace HEREGEX_OMIT, ''
+          val = deheregex t.1
           continue if one and not val
           one = tokens.push t <<< [\STRNUM @string \' enslash val]
         tokens.push [\+- \+ tokens[*-1]2]
@@ -319,7 +319,7 @@ exports import
         @token \, \,
         if dynaflag then tokens.push ...dynaflag else @token \STRNUM "'#flag'"
       @token (if flag is \$ then \) else \)CALL), ''
-    else @regex reslash(parts.0.1.replace HEREGEX_OMIT, ''), flag
+    else @regex reslash(deheregex parts.0.1), flag
     delim.length + parts.size + flag.length
 
   # Matches a word literal, or ignores a sequence of whitespaces.
@@ -748,6 +748,11 @@ reslash = replacer /(\\.)|\//g -> @@1 or \\\/
 # Transforms hyphenated-words to camelCase.
 camelize = replacer /-[a-z]/ig -> it.char-at 1 .to-upper-case!
 
+# ESifies a heregex.
+deheregex = replacer do
+  /\s+(?:#.*)?|(\\[\s\S])/g
+  (, bs || '') -> if \\n is bs.charAt 1 then \\\n else bs
+
 # Deletes the first character if newline.
 function lchomp then it.slice 1 + it.lastIndexOf \\n 0
 
@@ -1069,7 +1074,6 @@ REGEX = //
      )*
   )/ ([gimy]{1,4}|\$?)
 |//g
-HEREGEX_OMIT = /\s+(?:#.*)?/g
 
 LASTDENT   = /\n[^\n\S]*$/
 INLINEDENT = /[^\n\S]*[^#\s]|/g
