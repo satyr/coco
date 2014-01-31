@@ -124,11 +124,12 @@ bnf =
   # the parameter list of a function, or the contents of an array literal
   # (i.e. comma-separated expressions). Newlines work as well.
   ArgList:
-    o ''                                                -> []
-    o \Arg                                              -> [$1]
-    o 'ArgList , Arg'                                   -> $1.push $3; $1
-    o 'ArgList OptComma NEWLINE Arg'                    -> $1.push $4; $1
-    o 'ArgList OptComma INDENT ArgList OptComma DEDENT' -> $1.concat $4
+    o ''                                         -> []
+    o \Arg                                       -> [$1]
+    o 'INDENT ArgList OptComma DEDENT'           -> $2
+    o 'ArgList , Arg'                            -> $1.push $3; $1
+    o 'ArgList OptComma NEWLINE Arg'             -> $1.push $4; $1
+    o 'ArgList , INDENT ArgList OptComma DEDENT' -> $1.concat $4
   Arg:
     o     \Expression
     o '... Expression' -> Splat $2

@@ -38,7 +38,6 @@ ok true['toString']
 
 
 ### Arrays
-
 a = [((x) -> x), ((x) -> x * x)]
 eq a.length, 2
 
@@ -50,17 +49,8 @@ sum += n for n of [
 ]
 eq sum, 45
 
-
 # Trailing commas.
 eq '1,2' String [1, 2,]
-
-
-# Funky indentation within non-comma-seperated arrays.
-result = [['a']
- {b: 'c'}]
-
-eq 'a', result.0.0
-eq 'c', result.1.b
 
 
 #### Words
