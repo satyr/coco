@@ -376,9 +376,9 @@ exports import
     case \+ \-        then tag = \+-
     case \&& \||      then tag = \LOGIC
     case \?  \!?      then tag = \LOGIC if @last.spaced
-    case \/ \% \**    then tag = \MATH
     case \++ \--      then tag = \CREMENT
     case \<<< \<<<<   then tag = \IMPORT
+    case \/ \% \%% \** =>  tag = \MATH
     case \;
       @fset \by false
       tag = \NEWLINE
@@ -422,16 +422,6 @@ exports import
       case \ID \STRNUM \) then break
       case \...           then @last.0 = \STRNUM
       default tag = \LABEL; val = ''
-    case <[ = := += -= *= /= %= &= ^= |= <<= >>= >>>= <?= >?= **= ]>
-      if @last.1 is \. or @last.0 is \? and @adi!
-        @last.1 += val
-        return val.length
-      if @last.0 is \LOGIC
-        (val = Object val)logic = @tokens.pop!1
-      else if val of <[ += -= ^= ]> and not able @tokens and
-              @last.0 not of <[ +- ^ UNARY LABEL ]>
-        @token \UNARY val.charAt!; val = \=
-      tag = \ASSIGN
     case \*
       return that if @last.0 of <[ NEWLINE INDENT THEN ]>
                   and @doInlinedent code, index+1, \list
@@ -474,10 +464,22 @@ exports import
       @fset \for false
       return 1 + that if @doInlinedent code, index+2
       tag = \THEN
-    default if \< is val.charAt 0
-      @carp 'unterminated words' if val.length < 4
-      @token \WORDS, val, @adi!
-      return val.length
+    default
+      if \= is val.slice -1
+        if @last.1 is \. or @last.0 is \? and @adi!
+          @last.1 += val
+          return val.length
+        if @last.0 is \LOGIC
+          (val = Object val)logic = @tokens.pop!1
+        else if val of <[ += -= ^= ]> and not able @tokens and
+                @last.0 not of <[ +- ^ UNARY LABEL ]>
+          @token \UNARY val.charAt!
+          val = \=
+        tag = \ASSIGN
+      else if \< is val.charAt 0
+        @carp 'unterminated words' if val.length < 4
+        @token \WORDS, val, @adi!
+        return val.length
     @unline! if tag of <[ , |> DOT LOGIC COMPARE MATH IMPORT SHIFT BITWISE ]>
     @token tag, val
     sym.length
@@ -1040,7 +1042,7 @@ ID = //
   ( [^\n\S]* : (?![:=]) )?  # Is this a property name?
 |//ig
 SYMBOL = //
-  [-+*/%&|^:]=               # compound assign
+  [-+/&|^:]=                 # compound assign
 | \.{1,3}                    # dot / `constructor` / splat/placeholder/yada*3
 | ([-+&|@:])\1               # crement / logic / `prototype` / `arguments`
 | [-~=|]>                    # (bound-)function / inlinedent / pipe
@@ -1050,7 +1052,8 @@ SYMBOL = //
 | >>>?=?                     # rite shift
 | [<>]\??=?                  # {less,greater}-than(-or-equal-to) / min/max
 | !\?                        # inexistence
-| \*\*=?                     # pow
+| \*\*?=?                    # mul / pow
+| \%\%?=?                    # rem / mod
 | [^\s#]?
 //g
 SPACE     = /[^\n\S]*(?:#.*)?/g

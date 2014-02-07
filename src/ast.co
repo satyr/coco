@@ -924,7 +924,8 @@ class exports.Binary extends Node
       return @compileRepeat o if @first.isString! or @first.isArray!
     case \-  then return @compileRemove o if @second.isMatcher!
     case \/  then return @compileSplit  o if @second.isMatcher!
-    case \** then return @compilePow o
+    case \** then return Call.make(JS \Math.pow; [@first, @second])compile o
+    case \%% then return Call.make(Util    \mod; [@first, @second])compile o
     case \<? \>? then return @compileMinMax o
     case \&& \||
       @second.void = true if top = @void or not o.level
@@ -1024,8 +1025,6 @@ class exports.Binary extends Node
       x = (refs = x.cache o, LEVEL_OP)0 + " + #{refs.1}" * (n-1)
       if o.level < LEVEL_OP + PREC\+ then x else "(#x)"
 
-  compilePow: (o) -> Call.make(JS \Math.pow; [@first, @second])compile o
-
 #### Assign
 # Assignment to a variable/property.
 class exports.Assign extends Node
@@ -1073,7 +1072,7 @@ class exports.Assign extends Node
     return @compileDestructuring o, left if left.items
     left.isAssignable! or left.carp 'invalid assign'
     {op, right} = this
-    if op is \**=
+    if op of <[ **= %%= ]>
     or op is \*= and right.isString!
     or op of <[ -= /= ]> and right.isMatcher!
       right = Binary(op.slice 0 -1; Literal \<>; <>)
@@ -2200,6 +2199,8 @@ UTILS =
     while (i < l) if (x === arr[i++]) return true;
     return false;
   }'''
+
+  mod: 'function(a, n){ return (+a % (n = +n) + n) % n }'
 
   out: '''typeof exports != 'undefined' && exports || this'''
 
