@@ -174,5 +174,10 @@ eq '(function(){});' bare '''
   void
 '''
 
+
+# [#237](https://github.com/satyr/coco/issues/237)
+Coco.compile 'class A; class B; class C'
+
+
 # [livescript#279](https://github.com/gkz/LiveScript/issues/279)
 Coco.compile \################################################################
