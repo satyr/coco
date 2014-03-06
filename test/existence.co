@@ -102,6 +102,16 @@ duration = if options?.animated then 150 else 0
 eq duration, 0
 
 
+# Can be `that` target, assigning the operand.
+a = 0
+eq that, a if a?
+
+if nondeclared?
+  ok not that
+else
+  ok true
+
+
 ### Soak Call
 plus1 = (x) -> x + 1
 count = 0
@@ -130,6 +140,19 @@ eq (maybe_close 'string', 41)?(), void
 eq JSON?(3), void
 eq new Number?(42) | 0, 42
 eq new Bumper?(42) | 0, 0
+
+
+### Soak Assign
+a = [0 null]
+
+b? = a.0
+b? = a.1
+eq b, 0
+
+let [x, y?]? = a, {z}? = a.1
+  eq x, 0
+  eq y, void
+  eq z, void
 
 
 # [coffee#726](https://github.com/jashkenas/coffee-script/issues/726)
@@ -176,24 +199,9 @@ eq void do  A?
 {}frontness?
 
 
-# Can be `that` target, assigning the operand.
-a = 0
-eq that, a if a?
-
-if nondeclared?
-  ok not that
-else
-  ok true
-
-
-### Soak Assign
-a = [0 null]
-
-b? = a.0
-b? = a.1
-eq b, 0
-
-let [x, y?]? = a, {z}? = a.1
-  eq x, 0
-  eq y, void
-  eq z, void
+# [LiveScript#471](https://github.com/gkz/LiveScript/issues/471)
+o =
+  m: (x, y) -> @p * x * y
+  p: 2
+  a: [3 5]
+eq 30, o.m? ...o.a
