@@ -316,6 +316,8 @@ class exports.Literal extends Atom
 
   varName: -> if /^\w+$/test @value then \$ + @value else ''
 
+  makeReturn: -> if not it and @value is \debugger then this else super ...
+
   compile: (o, level ? o.level) ->
     switch val = "#{@value}"
     case \this then return o.scope.fun?bound or val
@@ -325,8 +327,8 @@ class exports.Literal extends Atom
       fallthrough
     case \null
       @carp 'invalid use of ' + @value if level is LEVEL_CALL
-    case \debugger then if level
-      return "(function(){\n#TAB#{o.indent}debugger;\n#{o.indent}}())"
+    case \debugger
+      return '(function(){ debugger }())' if level
     case \* \<>
       @carp "stray #val"
     case \&
