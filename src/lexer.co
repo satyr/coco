@@ -479,7 +479,7 @@ exports import
       else if \< is val.charAt 0
         @carp 'unterminated words' if val.length < 4
         @token \WORDS, val, @adi!
-        return val.length
+        return @countLines(val)length
     @unline! if tag of <[ , |> DOT LOGIC COMPARE MATH IMPORT SHIFT BITWISE ]>
     @token tag, val
     sym.length

@@ -59,6 +59,12 @@ eq \\ <[\]>0
 eq 0  <[ ]>length
 eq \1 [String]<[0]> 1
 
+compileThrows 'unterminated words' 3 '''
+  <[
+  ]>
+  <[
+'''
+
 
 #### Implicit arrays
 o =
