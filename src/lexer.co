@@ -38,6 +38,7 @@ exports import
   # Pretty-prints a token for errors.
   pp: ([tag, val]:token) ->
     return "`#tag` (implicit)" unless val
+    return "#{tag.toLowerCase!} by #val" if tag of <[ INDENT DEDENT ]>
     return tag if /^\s+/test val
     "`#val`"
 

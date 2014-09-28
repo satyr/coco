@@ -39,6 +39,8 @@ compileThrows 'unmatched `]`' 3 '[{\n\n]}'
 
 compileThrows 'missing `)CALL`' 1 'f('
 
+compileThrows 'unexpected indent by 1' 2 '{x\n y}'
+
 
 throws '''
   empty range on line 1
