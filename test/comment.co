@@ -57,6 +57,14 @@ test =
 
 eq test, 'test test test'
 
+
+# [livescript#550](https://github.com/gkz/LiveScript/issues/550)
+{1, \ # comment
+#!comment
+  #!comment
+    2}
+
+
 /*
   This is a block comment.
   Just like JS.
