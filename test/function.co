@@ -126,6 +126,10 @@ eq 5  new new Function('this.q = 5')()q
 eq 1, new [...[-> [1]]].0().0             # __slice
 eq 'object', typeof new {f: Number}.~f()  # __bind
 
+# `new BLOCK` does not return the last expression
+obj = new
+  @getValue = -> 5
+eq 5 obj.getValue!
 
 # Chained blocks, with proper indentation levels:
 counter =
