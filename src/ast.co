@@ -1608,6 +1608,17 @@ class exports.Return extends Jump
   compileNode: (o) ->
     "return#{ if @it then ' ' + that.compile o, LEVEL_PAREN else '' };"
 
+#### Return void
+class exports.ReturnVoid extends Jump
+  (@it) ~>
+
+  getJump: THIS
+
+  compileNode: (o) ->
+    @carp "Can't hush a return without a value" unless @it
+    "return void #{ @it.compile o, LEVEL_PAREN };"
+
+
 #### While
 # The traditional `while`/`for`/`do` loop.
 # Returns an array of values collected from the last expression when requested.

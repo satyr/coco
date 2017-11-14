@@ -183,3 +183,6 @@ Coco.compile 'class A; class B; class C'
 
 # [livescript#279](https://github.com/gkz/LiveScript/issues/279)
 Coco.compile \################################################################
+
+# Can't hush an empty return
+compileThrows "Can't hush a return without a value" 1 '-> return void'

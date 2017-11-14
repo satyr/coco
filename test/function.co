@@ -499,3 +499,7 @@ let
   eq a, b
   eq c, d
   eq e, f
+
+
+### can hush a return
+eq void, do -> return void true
